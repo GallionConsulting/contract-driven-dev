@@ -122,25 +122,29 @@ Record each check as PASS or FAIL with file:line reference.
 
 Check the module's data access against the `data_ownership` section of the contract.
 
-**CDD data access policy: reads are contracted, writes are enforced.**
-- Reads use framework-native patterns (ORM, query builder, relationships) — this is expected and correct. Verify reads are *declared*, not how they are accessed.
-- Writes are strictly enforced through ownership — only the owning module may write.
+**CDD data access policy: reads are contracted to public columns, writes are enforced.**
+- Reads use framework-native patterns (ORM, query builder, relationships) — this is expected and correct. Verify reads are *declared* and respect column visibility.
+- Writes are strictly enforced through ownership and public table writer declarations.
 
-**Reads (declared, direct access allowed):**
+**Reads (public columns declared, direct access allowed):**
 - Identify all database read operations (queries, ORM calls, relationship loads, joins) in the code
 - Every table/model accessed for reads MUST be declared in `data_ownership.reads` or `data_ownership.owns`
-- Flag any read from a table NOT declared in the contract's `data_ownership` — this is an undeclared dependency
+- For non-owned standard tables: verify the module only accesses columns listed in its `data_ownership.reads.columns` (which must all be public). Flag access to undeclared or private columns as a contract violation.
+- For public tables: all column access is allowed (all columns public)
+- For owned tables: all column access is allowed
 - Do NOT flag framework-native read patterns (eager loading, joins, relationship accessors) as violations — these are expected for declared tables
 
 **Writes (strictly enforced):**
 - Identify all database write operations (inserts, updates, deletes) in the code
-- Every table/model written to MUST be listed in `data_ownership.writes` (which must only contain tables from `data_ownership.owns`)
-- Flag ANY write to a table not in `data_ownership.owns` — this is a strict violation
+- Every write MUST target a table in `data_ownership.writes`
+- `data_ownership.writes` may include: (a) tables from `owns`, (b) public tables where this module is a declared writer
+- Flag ANY write to a table not meeting these criteria as a strict violation
 
 **Undeclared access:**
 - Check that the module does NOT access (read or write) any table that appears nowhere in its `data_ownership` section
 - An undeclared read is a missing contract entry (flag as warning — fix by adding to `data_ownership.reads`)
-- An undeclared write to another module's table is a design violation (flag as critical failure)
+- An undeclared write to a non-owned, non-public table is a design violation (flag as critical failure)
+- Access to a private column on a non-owned table is a contract violation (flag as failure)
 
 Record each check as PASS or FAIL with file:line reference.
 

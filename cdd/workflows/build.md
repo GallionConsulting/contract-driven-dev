@@ -57,7 +57,11 @@ Load ONLY these files — do not read anything else:
 
 1. **Module contract:** `.cdd/contracts/modules/[module].yaml` — read the FULL contract
 2. **System invariants:** `.cdd/contracts/system-invariants.yaml` — read in full
-3. **Data contracts for this module's tables:** For each table listed in the module's `data_ownership.owns` and `data_ownership.reads`, find the data contract file in `.cdd/contracts/data/*.yaml` that defines that table and read the table's column definitions, types, indexes, and foreign keys. This gives you the schema knowledge needed to write correct queries. Do NOT read table definitions for tables not in this module's `data_ownership`.
+3. **Data contracts for this module's tables:** For each table listed in the module's `data_ownership.owns` and `data_ownership.reads`, find the data contract file in `.cdd/contracts/data/*.yaml` that defines that table. Load column definitions as follows:
+   - **Owned tables:** Load full column definitions (all columns accessible)
+   - **Standard tables in `reads`:** Load ONLY the columns listed in the module's `data_ownership.reads.columns` declaration (these are the public columns the module has contracted to use)
+   - **Public tables in `reads`:** Load full column definitions (all columns are public)
+   Do NOT read table definitions for tables not in this module's `data_ownership`.
 4. **Dependency provides:** For each module listed in `requires.from_modules`, read ONLY the `provides` section of that module's contract at `.cdd/contracts/modules/[dep-name].yaml`. Do NOT read the full contract. Extract only the `provides.functions` entries that this module's contract references.
 5. **Shared service interfaces:** For each entry in `requires.from_shared`, note the service name and method — these were built during foundations and should already exist.
 6. **Failed session handoff:** If the module status is `failed`, check for the most recent session file for this module in `.cdd/sessions/` and read its `context_for_next_session` and `issues_discovered` fields.
@@ -108,20 +112,37 @@ Events emitted:
 ───────────────────────────────────────────────────────────────
 DATA ACCESS
 ───────────────────────────────────────────────────────────────
-Reads (direct access OK): [tables]
-Writes (owned — strictly enforced): [tables]
+Owned tables (full access):
+  - [table-name]
+
+Reads (public columns only):
+  - [table-name] [[col1], [col2], ...]     (owner: [module])
+
+Reads (public table — all columns):
+  - [table-name]                            (writers: [mod1], [mod2])
+
+Writes:
+  - [table-name]                            (owned)
+  - [table-name]                            (public table)
 
 ⚠ You may ONLY write to tables listed under Writes.
-  Use framework-native patterns (ORM, query builder) for reads.
+  For non-owned reads, you may ONLY access the declared public columns.
+  Use framework-native patterns (ORM, query builder) for all reads.
 
 ───────────────────────────────────────────────────────────────
 DATA SCHEMA (from data contracts)
 ───────────────────────────────────────────────────────────────
-[For each table in owns and reads, show the column definitions:]
-  [table-name]:
+[For owned tables and public tables, show ALL column definitions:]
+  [table-name] (owned / public table):
     [column]: [type] [constraints]
     [column]: [type] [constraints]
     ...
+
+[For non-owned standard tables, show ONLY declared public columns:]
+  [table-name] (public columns only — owner: [module]):
+    [column]: [type] [constraints]    ← public
+    [column]: [type] [constraints]    ← public
+    (N private columns not shown)
 
 ───────────────────────────────────────────────────────────────
 CONTEXT BUDGET
@@ -163,7 +184,7 @@ Build the service/business logic layer FIRST. This contains the pure functions t
 - Function signatures MUST match the contract exactly (parameter names, types, return types)
 - Use dependency functions via the interfaces loaded in Step 4 (from `requires.from_modules`)
 - Use shared services via the interfaces loaded in Step 4 (from `requires.from_shared`)
-- Respect data ownership — only WRITE to tables listed in `data_ownership.owns`. Use framework-native patterns for reads from tables in `data_ownership.reads`
+- Respect data ownership — only WRITE to tables listed in `data_ownership.writes` (owned tables and public tables where this module is a declared writer). For non-owned standard table reads, only access the declared public columns. Use framework-native patterns for all reads.
 - Follow the framework conventions from `config.yaml`
 
 After completing the service layer, update state:
@@ -179,7 +200,7 @@ modules:
 Build queries and data access operations.
 
 **Rules:**
-- Only WRITE to tables in `data_ownership.writes` (which must only be tables from `data_ownership.owns`)
+- Only WRITE to tables in `data_ownership.writes` (owned tables and public tables where this module is a declared writer)
 - Read from any table declared in `data_ownership.reads` or `data_ownership.owns` using framework-native patterns (ORM relationships, query builder, direct queries)
 - Do NOT read from or write to any table not listed in the contract's `data_ownership` at all
 - Follow the framework's query/ORM patterns — use idiomatic relationship loading, joins, and eager loading for reads
@@ -242,7 +263,7 @@ Before finishing, perform a quick self-check against the contract:
 1. Every `provides.functions` entry has a corresponding implementation
 2. Every `requires.from_modules` dependency is actually called
 3. Every `events_emitted` event is actually emitted
-4. Writes only touch tables in `data_ownership.owns`; reads only touch tables declared in `data_ownership`
+4. Writes only touch tables in `data_ownership.writes`; reads only touch tables declared in `data_ownership` and respect column visibility (only declared public columns for non-owned standard tables)
 5. Route paths and methods match the contract
 
 If any discrepancy is found, fix it now. Do not defer.

@@ -5,6 +5,7 @@ allowed-tools:
   - Read
   - Write
   - Edit
+  - Glob
 ---
 
 <objective>

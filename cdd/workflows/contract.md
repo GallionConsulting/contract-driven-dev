@@ -1,4 +1,5 @@
 # CDD Contract Generation Workflow
+<!-- workflow-version: 1.0 -->
 
 This document contains the full contract generation procedure for `cdd:contract`. Follow every step in order.
 
@@ -248,20 +249,31 @@ data_ownership:
     # Direct framework-native read access (ORM, query builder) is allowed.
     # Declared here for dependency tracking — NOT to enforce access patterns.
     # Optional: access_via names a service function for complex/computed queries.
+    #
+    # For standard tables: columns is REQUIRED — list only columns marked
+    # public: true in the data contract (plus any column on tables the module owns).
+    # For public tables: columns is omitted (all columns accessible);
+    # add public_table: true to indicate this.
     - table: "[table-name]"
       owner: "[owning-module]"
+      columns: ["[col1]", "[col2]"]   # Required for standard tables — must all be public
       access_via: "[optional — function name for complex queries, omit for direct reads]"
+    - table: "[public-table-name]"
+      public_table: true              # All columns accessible — no columns list needed
   writes:
-    # ONLY tables from 'owns' — strictly enforced. If you need to write to another
-    # module's table, that's a design problem. Use events or the owning module's API.
-    - table: "[table-name]"
+    # Tables from 'owns' plus public tables where this module is a declared writer.
+    # Standard-table writes are strictly enforced through ownership.
+    # Public-table writes require this module to be listed in the table's writers array.
+    - table: "[owned-table-name]"     # From owns — traditional
+    - table: "[public-table-name]"    # Public table — must be listed in writers
 ```
 
 **Critical rules for module contracts:**
 - Every `requires.from_modules` entry MUST have a corresponding `provides.functions` entry in the referenced module. If it doesn't match, fix it.
 - `blocked_by` MUST list every unique module name from `requires.from_modules`. If a module has no dependencies, use an empty array `[]`.
-- `data_ownership.writes` MUST ONLY list tables from `data_ownership.owns`. Cross-module writes are strictly forbidden.
+- `data_ownership.writes` MUST only list tables from `data_ownership.owns` OR tables marked `public_table: true` where this module is listed as a `writer` in the data contract. All other cross-module writes are strictly forbidden.
 - `data_ownership.reads` declares which tables a module reads for dependency tracking. Direct framework-native read access (ORM relationships, query builder, etc.) is allowed for declared reads. The `access_via` field is optional — include it only when the module should use a specific service function for complex or computed queries.
+- For standard (non-public) table reads, `columns` is REQUIRED and must list only columns marked `public: true` in the data contract (plus any column on tables the module owns). For public table reads, omit `columns` (all columns accessible) and add `public_table: true`.
 - Context estimates should come from MODULES.md, verified and adjusted if the contract is more complex than expected.
 - If a section is empty (e.g., no events consumed), use an empty array `[]` rather than omitting the section.
 
@@ -279,6 +291,7 @@ locked: true
 description: "[what this data domain covers]"
 
 tables:
+  # --- Standard table (single owner, private-by-default columns) ---
   - name: "[table-name]"
     description: "[what this table stores]"
     owner_module: "[module-name]"
@@ -287,15 +300,41 @@ tables:
         type: "[database type — e.g., uuid, varchar(255), integer, text, timestamp, boolean, jsonb]"
         nullable: [true|false]
         primary_key: [true|false]
+        public: [true|false]          # Optional — columns are private by default.
+                                      # Set public: true for columns intended for
+                                      # external (cross-module) consumption.
         default: "[default value if any]"
         description: "[what this column stores]"
       - name: "[foreign-key-column]"
         type: "[type]"
         nullable: [true|false]
+        public: [true|false]          # FK columns must be explicitly marked public
         foreign_key:
           table: "[referenced-table]"
           column: "[referenced-column]"
           on_delete: "[cascade|set-null|restrict]"
+    indexes:
+      - columns: ["[col1]", "[col2]"]
+        unique: [true|false]
+        name: "[index-name]"
+    consumer_modules:
+      - "[module-name-that-reads-this-table]"
+
+  # --- Public table (multi-writer, all columns implicitly public) ---
+  - name: "[table-name]"
+    description: "[what this table stores]"
+    public_table: true                # All columns are implicitly public.
+    writers:                          # Replaces owner_module — lists all modules
+      - "[module-name]"               # that may write to this table.
+      - "[module-name]"
+    columns:
+      - name: "[column-name]"
+        type: "[database type]"
+        nullable: [true|false]
+        primary_key: [true|false]
+        # public: implicit — all columns are public on a public_table
+        default: "[default value if any]"
+        description: "[what this column stores]"
     indexes:
       - columns: ["[col1]", "[col2]"]
         unique: [true|false]
@@ -308,7 +347,11 @@ tables:
 
 **Data contract rules:**
 - Group tables by domain (e.g., `users.yaml` for user-related tables, `billing.yaml` for billing tables)
-- Every table MUST have an `owner_module` that matches exactly one module contract's `data_ownership.owns`
+- Every standard table MUST have an `owner_module` that matches exactly one module contract's `data_ownership.owns`
+- A table uses EITHER `owner_module` (single owner, standard) OR `public_table: true` + `writers: [...]` (multi-writer). Never both.
+- **Columns are private by default.** Add `public: true` only to columns intended for external (cross-module) consumption. FK columns must be explicitly marked public — they are not auto-promoted.
+- **Public tables** have ALL columns implicitly public — no per-column `public` annotation is needed.
+- On public tables, `consumer_modules` lists modules that READ the table; `writers` lists modules that WRITE.
 - Column types should be specific to the database from config.yaml (e.g., use `uuid` not `string` for PostgreSQL UUIDs)
 - Include audit columns (created_at, updated_at, etc.) as specified in system-invariants.yaml
 - Include indexes for foreign keys and commonly queried columns
@@ -380,7 +423,18 @@ For every event in the events registry:
 ### 7e: Budget Verification
 For each module, check if the actual contract file sizes plus dependencies still fit within the estimated context budget. If a module's contracts grew significantly, flag it.
 
-### 7f: Report
+### 7f: Public Column Consistency
+For every module's `data_ownership.reads` that includes a `columns` list:
+- Verify each listed column exists in the data contract for that table
+- Verify each listed column has `public: true` in the data contract
+- Flag any column that is not public or does not exist
+
+For every module's `data_ownership.writes` that lists a non-owned table:
+- Verify the table is marked `public_table: true` in the data contract
+- Verify this module is listed in the table's `writers` array
+- Flag any non-owned, non-public-table write as a strict violation
+
+### 7g: Report
 Compile a verification report. If there are inconsistencies, fix them before presenting to the user.
 
 ## Step 8: Present for Approval

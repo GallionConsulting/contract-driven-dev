@@ -9,7 +9,7 @@ When AI-assisted projects grow beyond a single conversation, they fall apart. Cl
 - **Defining contracts before code** — every module's inputs, outputs, data access, and events are specified upfront
 - **Isolating sessions** — each command operates within a bounded context, never exceeding 40% of the context window
 - **Structured handoffs** — session files carry decisions and progress forward without relying on chat history
-- **Enforcing data ownership** — every database table has exactly one owner module; writes are strictly enforced through ownership while reads are declared for dependency tracking with direct framework-native access allowed
+- **Enforcing data ownership** — every database table has exactly one owner module (or is a declared public table with explicit writers). Private columns are internal to the owning module; public columns form a stable API surface for cross-module reads. Writes are strictly enforced through ownership. Public tables allow multi-writer access for shared data systems.
 
 CDD works best for **modular, data-driven systems** — REST APIs, SaaS platforms, admin panels, multi-tenant apps, or any project where clear module boundaries and interface contracts prevent cross-session drift.
 
@@ -437,7 +437,7 @@ Final:      /cdd:audit            → full system check
 - **Contracts lock after `/cdd:contract`** — changes require `/cdd:contract-change`
 - **Build order follows dependencies** — `/cdd:complete` tells you what's unblocked
 - **Load interfaces, not implementations** — when module B depends on A, only A's `provides` section is loaded
-- **Every table has one owner** — writes are strictly enforced through ownership; reads are declared but use framework-native patterns
+- **Every table has one owner (or is a public table)** — writes are strictly enforced through ownership; reads are contracted to public columns and use framework-native patterns
 
 ## License
 

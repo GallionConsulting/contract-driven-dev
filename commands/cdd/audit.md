@@ -133,11 +133,12 @@ Perform a LIGHTWEIGHT compliance check (lighter than `cdd:verify` — sample-bas
    - Use Grep to search for function definitions matching contracted names
    - Flag any contracted function that cannot be found
 
-2. **Data access check:** Does the module respect data ownership? (Reads are contracted, writes are enforced.)
+2. **Data access check:** Does the module respect data ownership and column visibility?
    - Grep for table names, model references, or query patterns in the module's source
-   - Flag any WRITE to a table not in `data_ownership.owns` (strict violation)
+   - Flag any WRITE to a table not in `data_ownership.writes` (strict violation)
    - Flag any READ from a table not declared in `data_ownership.reads` or `data_ownership.owns` (undeclared dependency — warning)
-   - Do NOT flag framework-native read patterns (ORM relationships, joins, eager loading) for declared tables — direct reads are allowed
+   - For non-owned standard table reads: spot-check that accessed columns are in the module's declared `columns` list (which must be public)
+   - Do NOT flag framework-native read patterns (ORM relationships, joins, eager loading) for declared tables/columns — direct reads are allowed
 
 3. **Dependency check:** Does the module import from its declared dependencies only?
    - Check import/require statements for references to other modules

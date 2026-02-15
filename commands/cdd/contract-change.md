@@ -101,10 +101,16 @@ Categorize affected modules:
 
 **Unaffected modules** — do not list these.
 
+**Public column / public table impact rules:**
+- When a column marked `public: true` is being **removed or modified**: automatically flag ALL modules that list this column in their `data_ownership.reads.columns` as affected.
+- When a column's `public` status is being **removed** (public → private): this is a breaking change for all consuming modules. Classify as HEAVY regardless of count.
+- When a new column is being **added** as `public: true`: this is additive and typically LIGHT (no existing consumers affected).
+- When a table's `public_table` status is being removed or a module is removed from `writers`: flag all affected reader/writer modules.
+
 Classify the change weight:
 - **LIGHT** — 0 built modules affected (simple contract update, no code changes needed)
 - **MEDIUM** — 1 built module affected (targeted remediation)
-- **HEAVY** — 2+ built modules affected (significant remediation effort)
+- **HEAVY** — 2+ built modules affected, OR any public→private column change (significant remediation effort)
 
 Display:
 ```
