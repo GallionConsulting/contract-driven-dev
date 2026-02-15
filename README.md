@@ -73,6 +73,16 @@ If your Claude Code config lives somewhere other than `~/.claude/`, set the `CLA
 CLAUDE_CONFIG_DIR=~/my-claude-config node bin/install.js
 ```
 
+## Permission Mode
+
+CDD relies on hooks and automated file operations that trigger frequent permission prompts in Claude Code's default mode. For smooth functionality, run Claude Code with permissions bypassed:
+
+```bash
+claude --dangerously-skip-permissions
+```
+
+Without this flag, you'll be interrupted by approval prompts on nearly every CDD command as hooks read/write state files, update the status line, and manage session data. The flag allows all of these operations to proceed without manual confirmation.
+
 ## Updating
 
 Run the installer again to update to a newer version. Download or pull the latest source and run:
