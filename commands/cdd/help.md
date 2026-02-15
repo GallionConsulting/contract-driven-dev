@@ -1,0 +1,74 @@
+---
+name: cdd:help
+description: Show all available CDD commands and current project status
+allowed-tools:
+  - Read
+  - Glob
+---
+
+<objective>
+Display a complete reference of all CDD commands, grouped by workflow phase, with descriptions and current project status if available.
+</objective>
+
+<process>
+1. Check if `.cdd/state.yaml` exists in the current project directory
+2. If it exists, read it to determine the current phase and progress
+3. Display the command reference below, highlighting the recommended next command based on current state
+
+Display the following output:
+
+```
+═══════════════════════════════════════════════════════════════
+CONTRACT-DRIVEN DEVELOPMENT (CDD) — Command Reference
+═══════════════════════════════════════════════════════════════
+
+SETUP
+  /cdd:init             Initialize CDD for a new project
+  /cdd:help             Show this command reference
+
+PLANNING (sequential, one-time)
+  /cdd:brief            Capture project vision through interactive discussion
+  /cdd:plan             Transform brief into structured requirements
+  /cdd:modularize       Break system into modules with context budgets
+  /cdd:contract         Define all interface contracts (critical step)
+
+FOUNDATION (sequential)
+  /cdd:foundation       Build infrastructure (db, auth, tenant, middleware, shared)
+
+BUILD CYCLE (repeating per module)
+  /cdd:build [module]   Implement a module from its contract
+  /cdd:verify [module]  Verify implementation matches contract
+  /cdd:test [module]    Run module tests
+  /cdd:complete [mod]   Mark module as complete
+
+SESSION MANAGEMENT
+  /cdd:status           Show full project status
+  /cdd:resume           Continue in-progress work from previous session
+  /cdd:context [module] Load module briefing without starting a build
+
+RECOVERY
+  /cdd:reset [module]   Abandon partial build, return to ready state
+  /cdd:contract-change  Formally request a contract modification
+  /cdd:audit            Full system contract compliance check
+
+───────────────────────────────────────────────────────────────
+WORKFLOW: init → brief → plan → modularize → contract
+         → foundation → [build → verify → test → complete]*
+         → audit
+───────────────────────────────────────────────────────────────
+```
+
+4. If `.cdd/state.yaml` exists, append a status summary showing:
+   - Current phase
+   - Last completed step
+   - Recommended next command (with the `👉` indicator)
+
+5. If `.cdd/state.yaml` does NOT exist, append:
+```
+
+  No CDD project found in this directory.
+  Run /cdd:init to get started.
+
+═══════════════════════════════════════════════════════════════
+```
+</process>

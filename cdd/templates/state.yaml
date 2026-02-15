@@ -1,0 +1,25 @@
+# CDD Project State
+# Tracks current phase and progress across sessions
+
+phase: planning
+
+planning:
+  brief:
+    status: pending
+  plan:
+    status: pending
+  modularize:
+    status: pending
+  contract:
+    status: pending
+    locked: false
+
+foundations: {}
+
+modules: {}
+
+build_order: []
+
+parallel_groups: []
+
+contract_changes: []

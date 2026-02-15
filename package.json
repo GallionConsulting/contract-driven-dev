@@ -1,0 +1,30 @@
+{
+  "name": "contract-driven-dev",
+  "version": "2.0.0",
+  "description": "Contract-Driven Development (CDD) command system for Claude Code — enforce interface contracts across multi-session builds",
+  "bin": {
+    "contract-driven-dev": "bin/install.js"
+  },
+  "files": [
+    "bin",
+    "commands",
+    "cdd"
+  ],
+  "engines": {
+    "node": ">=16.7.0"
+  },
+  "keywords": [
+    "claude-code",
+    "contract-driven-development",
+    "cdd",
+    "ai-development",
+    "multi-session",
+    "interface-contracts"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  }
+}

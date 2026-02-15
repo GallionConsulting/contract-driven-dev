@@ -1,0 +1,226 @@
+---
+name: cdd:test
+description: Generate and run tests for a verified module
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Glob
+  - Grep
+---
+
+<objective>
+Generate and run tests for a verified module. Tests are derived from the module's locked contract — every `provides.functions` entry gets tested for expected inputs/outputs, edge cases, and data access patterns. If tests already exist, run them first. If they don't exist, generate them from the contract before running.
+</objective>
+
+<execution_context>
+You are running the `cdd:test` command. This generates contract-derived tests and runs them.
+
+**Argument:** The user MUST provide a module name. If no argument is provided, read `.cdd/state.yaml` and display all modules with their verify/test status, highlighting any that are ready to test (verified but not yet tested). Then stop.
+
+**Pre-conditions — check these FIRST:**
+1. Read `.cdd/state.yaml`
+2. Verify `phase: build_cycle`
+3. Verify the module contract exists at `.cdd/contracts/modules/[module].yaml`
+4. Verify `modules.[module].verified: true` — if not, tell the user to run `cdd:verify [module]` first
+
+**Context loaded:**
+- Module contract (`.cdd/contracts/modules/[module].yaml`) — for understanding expected behavior
+- Module source files — for writing and running tests
+- `.cdd/config.yaml` — for test framework, paths, and test runner command
+- System invariants — for response format conventions
+</execution_context>
+
+<process>
+
+## Step 1: Check Pre-conditions
+
+Read `.cdd/state.yaml`. Verify:
+- `phase` is `build_cycle`
+- Module contract exists
+- `modules.[module].verified` is `true`
+
+If pre-conditions fail, explain why and suggest the correct next command. Stop.
+
+## Step 2: Load Context
+
+1. Read the module contract at `.cdd/contracts/modules/[module].yaml`
+2. Read `.cdd/config.yaml` for test configuration (test framework, test paths, test runner command)
+3. Read `.cdd/contracts/system-invariants.yaml` for response format conventions
+4. Find and read the module's source files (from session file or by Glob)
+5. Check if tests already exist for this module (Glob for test files matching the module name in the test directory)
+
+## Step 3: Check for Existing Tests
+
+Search for existing test files for this module:
+- Use Glob with patterns like `**/test*[module]*`, `**/*[module]*test*`, `**/*[module]*.spec.*`, `**/*[module]*.test.*`
+- Also check the test path from `config.yaml` if specified
+
+**If tests exist:**
+- Read them to understand coverage
+- Run them first (Step 4)
+- Then check if they cover all contracted interfaces (Step 5)
+- Generate additional tests for any uncovered contract items
+
+**If no tests exist:**
+- Skip to Step 5 to generate tests from scratch
+
+## Step 4: Run Existing Tests
+
+If tests exist, run them using the test runner from `config.yaml`:
+- Common runners: `npm test`, `npx jest`, `php artisan test`, `pytest`, `go test`, `cargo test`
+- Run ONLY the tests for this module, not the entire test suite
+- Capture output
+
+**If all pass:** Note the passing count and proceed to coverage check (Step 5)
+**If any fail:** Report failures and stop — do not generate more tests until existing ones pass
+
+## Step 5: Generate Contract-Derived Tests
+
+For each entry in the module contract, generate appropriate tests. Follow the test framework conventions from `config.yaml`.
+
+**5a. Function tests (from `provides.functions`):**
+
+For each function in `provides.functions`:
+
+- **Happy path test:** Call the function with valid inputs matching the contract's parameter types. Assert the return value matches the contracted return type and shape.
+
+- **Input validation tests:** Test with:
+  - Missing required parameters
+  - Wrong types (string where number expected, etc.)
+  - Null/undefined values
+  - Empty strings, zero values, negative numbers (where applicable)
+
+- **Edge case tests:** Based on the function's semantics:
+  - List functions: test with empty results, single result, multiple results
+  - Create functions: test duplicate handling (if contract implies uniqueness)
+  - Update functions: test with non-existent IDs
+  - Delete functions: test with non-existent IDs
+
+**5b. Data access tests (from `data_ownership`):**
+
+- For each table in `data_ownership.writes`: test that create/update/delete operations affect the correct table
+- For read operations: test that queries return data in the expected shape
+- Test that the module does NOT write to tables outside its `data_ownership.writes`
+
+**5c. Event tests (from `events_emitted`, if applicable):**
+
+- For each event: test that the event is emitted when the triggering action occurs
+- Test that the event payload matches the contracted schema
+- Test that events are NOT emitted on failure cases
+
+**5d. API route tests (if applicable):**
+
+- For each contracted endpoint: test the HTTP method, path, expected status codes
+- Test authentication requirements (authenticated vs public routes)
+- Test request validation (invalid inputs should return proper error responses matching system invariants)
+- Test response shapes match the contracted output
+
+**Test file naming and location:**
+- Follow the project's test conventions from `config.yaml`
+- Common patterns: `tests/[module].test.js`, `tests/Unit/[Module]Test.php`, `tests/test_[module].py`
+- Place tests alongside the source files or in the designated test directory, matching the project's pattern
+
+## Step 6: Run All Tests
+
+Run the full test suite for this module (existing + newly generated):
+- Use the test runner command from `config.yaml`
+- Run ONLY this module's tests
+- Capture full output
+
+Display results:
+```
+═══════════════════════════════════════════════════════════════
+TEST RESULTS — [module-name]
+═══════════════════════════════════════════════════════════════
+
+Tests run: [total]
+  ✅ Passed: [count]
+  ❌ Failed: [count]
+  ⏭️ Skipped: [count]
+
+Coverage:
+  Functions tested: [N/total] from provides.functions
+  Data access tested: [N/total] tables
+  Events tested: [N/total] from events_emitted
+  Routes tested: [N/total] endpoints
+
+[If any failures, list them:]
+───────────────────────────────────────────────────────────────
+FAILURES
+───────────────────────────────────────────────────────────────
+1. [test name]
+   Expected: [expected]
+   Actual: [actual]
+   File: [test-file:line]
+
+2. ...
+═══════════════════════════════════════════════════════════════
+```
+
+## Step 7: State Update and Next Steps
+
+**If ALL PASS:**
+
+Read `.cdd/state.yaml` and update:
+```yaml
+modules:
+  [module]:
+    tested: true
+    tested_at: "[ISO 8601 timestamp]"
+    test_count: [number of tests]
+    test_file: "[path to test file]"
+```
+
+Display footer:
+```
+═══════════════════════════════════════════════════════════════
+✅ CDD:TEST COMPLETE — [module-name] ALL TESTS PASSED
+
+   [N] tests passed covering [functions/events/routes/data].
+   Module is verified and tested — ready for completion.
+
+───────────────────────────────────────────────────────────────
+👉 Recommended next step:
+   1. Run /clear to reset your context window
+   2. Then run /cdd:complete [module-name] to mark the
+      module as complete and see what's unblocked
+
+   /clear resets your context window to zero. The .cdd/ state
+   files carry everything forward — nothing is lost.
+───────────────────────────────────────────────────────────────
+═══════════════════════════════════════════════════════════════
+```
+
+**If ANY FAIL:**
+
+Do NOT update `tested` to true. Display:
+```
+═══════════════════════════════════════════════════════════════
+❌ CDD:TEST — [module-name] FAILURES DETECTED
+
+   [N] tests failed out of [total].
+
+   Failures listed above with details.
+
+───────────────────────────────────────────────────────────────
+👉 Options:
+   • Fix the implementation to make tests pass
+     (if the code has bugs)
+   • Fix the tests if they don't match the contract
+     (if the tests are wrong)
+   • Run /cdd:contract-change if the contract itself is wrong
+
+   After fixing, run /cdd:test [module-name] again.
+
+   If context is getting large, run /clear first then
+   /cdd:resume to reload with fresh context.
+───────────────────────────────────────────────────────────────
+═══════════════════════════════════════════════════════════════
+```
+
+If failures are minor (e.g., simple assertion mismatches) and context budget is under 30% used, offer to fix them now:
+"These failures appear to be minor implementation bugs. Context is still low. Would you like me to fix the code and re-run tests now?"
+
+</process>

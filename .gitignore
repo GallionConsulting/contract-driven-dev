@@ -1,0 +1,15 @@
+# Internal development files — not part of the published package
+.claude/
+.designdocuments/
+.planning/
+
+# Dev artifacts
+ccdsp.bat
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Node
+node_modules/
+npm-debug.log*
