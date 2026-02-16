@@ -201,7 +201,7 @@ Claude will ask about your tech stack (language, framework, database), project p
 
 #### `/cdd:brief` — Capture your project vision
 
-A guided conversation where you describe what you want to build. Claude asks questions about users, features, data, and scope, then produces a vision document.
+A guided conversation where you describe what you want to build. Claude asks questions about users, features, data, and scope, then produces a vision document. How you talk to the brief matters — see the [Annotated Brief Example](docs/brief-interaction-guide.md) for a full walkthrough and the [Brief Cheat Sheet](docs/brief-cheat-sheet.md) for a quick reference on what to say, what to avoid, and how to handle future plans without bloating your MVP.
 
 ```
 /cdd:brief
