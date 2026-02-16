@@ -1,6 +1,6 @@
 # Contract-Driven Development (CDD)
 
-![Version](https://img.shields.io/badge/version-2.2.0-blue)
+![Version](https://img.shields.io/badge/version-2.3.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 A command system for Claude Code that enforces interface contracts across multi-session AI-assisted builds. CDD prevents "project context exhaustion" by breaking work into isolated, contract-governed modules that can each be built in focused sessions.
