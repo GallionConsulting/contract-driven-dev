@@ -213,6 +213,18 @@ A convenience notifier that sends formatted messages directly to a Telegram chat
    export CDD_TELEGRAM_CHAT_ID="987654321"
    ```
 
+   On Windows, use system environment variables or set them per-session:
+
+   ```powershell
+   # PowerShell (current session)
+   $env:CDD_TELEGRAM_BOT_TOKEN="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
+   $env:CDD_TELEGRAM_CHAT_ID="987654321"
+
+   # PowerShell (persistent, user-level)
+   [Environment]::SetEnvironmentVariable("CDD_TELEGRAM_BOT_TOKEN", "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11", "User")
+   [Environment]::SetEnvironmentVariable("CDD_TELEGRAM_CHAT_ID", "987654321", "User")
+   ```
+
 **Config:**
 
 ```yaml
@@ -300,6 +312,16 @@ All hooks and notifiers support debug logging. When enabled, they write detailed
 CDD_DEBUG=1 claude
 ```
 
+On Windows, set the variable first:
+
+```powershell
+# PowerShell
+$env:CDD_DEBUG="1"; claude
+
+# Command Prompt
+set CDD_DEBUG=1 && claude
+```
+
 **Enable via config** (persistent, per-project):
 
 ```yaml
@@ -311,6 +333,12 @@ The log file grows without bound, so disable debug mode when you're done. To cle
 
 ```bash
 rm .cdd/debug.log
+```
+
+On Windows:
+
+```powershell
+Remove-Item .cdd\debug.log
 ```
 
 **Example output:**
@@ -341,9 +369,21 @@ Since notifiers fail silently by design, use these steps to debug notification i
      "https://your-webhook-url"
    ```
 
+   On Windows (PowerShell):
+   ```powershell
+   curl -Method POST -ContentType "application/json" `
+     -Body '{"text": "test"}' `
+     "https://your-webhook-url"
+   ```
+
 4. **Check environment variables (Telegram).** Verify that `CDD_TELEGRAM_BOT_TOKEN` and `CDD_TELEGRAM_CHAT_ID` are set in the shell where Claude Code runs. Environment variables set in a different terminal session won't be visible.
 
 5. **Test a custom notifier directly:**
    ```bash
    echo '{"event":"stopped","project":"test"}' | node /path/to/my-notifier.js
+   ```
+
+   On Windows (PowerShell):
+   ```powershell
+   '{"event":"stopped","project":"test"}' | node C:\path\to\my-notifier.js
    ```
