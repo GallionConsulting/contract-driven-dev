@@ -54,7 +54,7 @@ node ~/projects/contract-driven-dev/bin/install.js --local
 node bin/install.js
 ```
 
-No `npm install` step is needed — the installer has zero dependencies beyond Node.js itself.
+No dependency installation is needed — the installer has zero dependencies beyond Node.js itself.
 
 ### Global vs Local
 

@@ -9,7 +9,6 @@ All hooks are installed automatically by the CDD installer and registered in you
 | Hook | Event | What It Does |
 |------|-------|-------------|
 | Session Start | `SessionStart` | Detects `.cdd/` and shows phase/module status when you start a session |
-| Update Check | `SessionStart` | Checks npm for newer CDD versions in the background |
 | Status Line | `statusLine` | Renders a persistent status bar with phase, module, context usage |
 | Scope Guard | `PreToolUse` | Warns when Claude writes files outside the active module's path |
 | Notification | `Notification` | Maps Claude Code permission/input prompts to CDD notification events |
@@ -25,10 +24,6 @@ When you open Claude Code in a CDD project, the session start hook reads `.cdd/s
 
 If the project has no `.cdd/` directory, the hook is silent.
 
-### Update Check
-
-A background process (never blocks startup) checks whether a newer version of CDD is available on npm. The result is cached for one hour at `~/.claude/cache/cdd-update-check.json` and displayed in the status line when an update is found.
-
 ### Status Line
 
 The status line appears at the bottom of your Claude Code session:
@@ -41,8 +36,6 @@ Components:
 - **Model name** -- from Claude Code
 - **CDD phase + module** -- current build state (only in CDD projects)
 - **Project directory** -- basename of the working directory
-- **Update notice** -- shown when a newer CDD version is available
-
 ### Scope Guard
 
 During the build cycle, the scope guard fires on `Write` and `Edit` tool calls. If Claude is about to write a file outside the active module's source path, it outputs a warning:
@@ -295,7 +288,7 @@ notifications:
 - **Fire-and-forget** -- Notifiers are spawned as detached background processes. Hooks never wait for them to finish, so notification failures can't slow down or break Claude.
 - **Silent failure** -- If a notifier crashes, times out, or the URL is unreachable, nothing happens. No errors are shown to Claude or the user.
 - **State file first** -- The monitor state file (`.cdd/monitor/state.json`) is always written before notifiers are dispatched. Even if notifications are disabled, you can always poll the state file.
-- **Zero dependencies** -- All notifiers use Node.js built-in modules (`https`, `http`). No npm packages required.
+- **Zero dependencies** -- All notifiers use Node.js built-in modules (`https`, `http`). No external packages required.
 
 ### Debug Mode
 

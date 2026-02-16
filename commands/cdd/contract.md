@@ -27,5 +27,5 @@ You are running the `cdd:contract` command. This produces the binding contracts 
 <process>
 Read the full contract workflow from `~/.claude/cdd/workflows/contract.md` (expected: workflow-version 1.0) and follow it exactly.
 
-If the workflow file is missing or the version comment does not match, warn the user that their CDD installation may be out of date and suggest re-running the installer (`npm install` from the CDD package directory).
+If the workflow file is missing or the version comment does not match, warn the user that their CDD installation may be out of date and suggest re-running the installer (`node bin/install.js` from the CDD source directory).
 </process>
