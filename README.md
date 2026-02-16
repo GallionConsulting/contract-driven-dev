@@ -1,6 +1,6 @@
 # Contract-Driven Development (CDD)
 
-![Version](https://img.shields.io/badge/version-2.5.0-blue)
+![Version](https://img.shields.io/badge/version-2.6.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 A slash-command toolkit for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that lets you build real, multi-module projects — the kind that are too big for a single conversation. You describe what you want, CDD breaks it into pieces with clear contracts between them, and then you build each piece in a focused session. Nothing gets lost between sessions because everything important lives in files, not chat history.
@@ -317,25 +317,33 @@ Once all modules are complete, runs a full check across four areas:
 /cdd:audit
 ```
 
-#### `/cdd:fix-request [issues]` — Sort issues into fix files
+#### `/cdd:change-request [changes]` — Sort changes into per-module files
 
-When an audit or code review turns up problems, this command groups them into per-module YAML fix files. No code reading, no fixes — just organized grouping. Issues are sorted by module and severity, then written to `.cdd/fixes/pending/`.
-
-```
-/cdd:fix-request
-```
-
-Paste your issues as a markdown table, numbered list, or plain text. The command outputs a **run sheet** — a list of `/cdd:fix`, `/cdd:verify`, and `/cdd:test` commands to run with `/clear` between each.
-
-#### `/cdd:fix [fix-file]` — Fix one module's issues
-
-Loads ONE fix file, looks at each issue against the module's code and contract, gives a verdict (CONFIRMED / FALSE_POSITIVE / CONTRACT_ISSUE / DEFERRED), and applies fixes for confirmed issues. Verify and test run as separate sessions afterward.
+When you have changes to make — bug fixes, UI tweaks, feature modifications, element removals — this command groups them into per-module YAML change files. Describe what you want changed; the command figures out which modules are affected. No code reading, no changes applied — just organized grouping by module and severity, written to `.cdd/changes/pending/`.
 
 ```
-/cdd:fix auth-FIX-20260215-1030
+/cdd:change-request
+In module Sales, move the "Buy" button to the bottom of the Order Screen and rename it "Purchase"
+In module Users, remove the Password column from the grid
+Auth module has a loose != comparison on line 45 that should be strict
 ```
 
-After fixing, the fix file moves to `.cdd/fixes/completed/` with verdicts and change records, and the module's `verified` and `tested` flags are reset so it goes through verify and test again. This keeps each fix session focused.
+The command outputs a **run sheet** — a list of `/cdd:change`, `/cdd:verify`, and `/cdd:test` commands to run with `/clear` between each.
+
+#### `/cdd:change [change-file]` — Process one module's changes
+
+Loads ONE change file, researches each item against the module's code and contracts, gives a verdict, and applies changes where possible. Verdicts:
+
+- **ACTIONABLE** — can be done within current contracts; change is applied
+- **NO_CHANGE_NEEDED** — already works as described or change would have no effect
+- **CONTRACT_CHANGE_REQUIRED** — needs a contract modification first (includes which clause, why, and the exact `/cdd:contract-change` command to run)
+- **DEFERRED** — too broad or risky for this session
+
+```
+/cdd:change users-CHG-20260216-1400
+```
+
+After processing, the change file moves to `.cdd/changes/completed/` with verdicts and change records, and the module's `verified` and `tested` flags are reset so it goes through verify and test again.
 
 ### Post-Build Additions
 
@@ -447,11 +455,11 @@ your-project/
         [module-name].yaml       # Per-module contract: requires, provides, data access
       data/
         [schema-name].yaml       # Data schema: tables, columns, constraints, owners
-    fixes/                       # Issue tracking (from /cdd:fix-request + /cdd:fix)
-      pending/
-        [module]-FIX-[timestamp].yaml   # Issue batch waiting to be processed
-      completed/
-        [module]-FIX-[timestamp].yaml   # Processed fix results with verdicts
+    changes/                     # Change tracking (from /cdd:change-request + /cdd:change)
+      pending/                 # Change files awaiting processing
+        [module]-CHG-[timestamp].yaml
+      completed/               # Processed change results with verdicts
+        [module]-CHG-[timestamp].yaml
     additions/                   # Post-build module additions (from /cdd:add-module)
       [slug].md                  # Addition scoping file
 ```
@@ -468,7 +476,7 @@ FOUNDATION                  foundation db → auth → middleware → shared →
 BUILD CYCLE (per module)    build → verify → test
 WRAP-UP                     audit
 
-FIX (if issues found)       fix-request → fix → verify → test   (per module)
+CHANGE (if changes needed)  change-request → change → verify → test   (per module)
 ADD (post-build)            add-module → add-contract → build → verify → test   (per module)
 ```
 
@@ -486,8 +494,8 @@ ADD (post-build)            add-module → add-contract → build → verify →
 | `/cdd:verify [module]`       | Building   | Check code against contract (5 points)                                     |
 | `/cdd:test [module]`         | Building   | Run tests, mark complete, show what's unblocked                            |
 | `/cdd:audit`                 | Wrap-Up    | Full system check (4 areas)                                                |
-| `/cdd:fix-request [issues]`  | Fixes      | Sort issues into per-module fix files                                      |
-| `/cdd:fix [fix-file]`        | Fixes      | Fix one module's issues (research, verdict, fix)                           |
+| `/cdd:change-request [changes]` | Changes | Sort changes into per-module change files                                |
+| `/cdd:change [change-file]`     | Changes | Process one module's changes (research, verdict, apply)                  |
 | `/cdd:add-module`            | Post-Build | Scope new modules for a built system (guided)                              |
 | `/cdd:add-contract [module]` | Post-Build | Generate locked contract for an added module                               |
 | `/cdd:status`                | Any        | Show phase, progress, and budgets                                          |
@@ -517,8 +525,8 @@ Session 13: /cdd:test users       → run tests, mark complete → /clear
 Final:      /cdd:audit            → full system check               → /clear
 
             ... if issues found ...
-            /cdd:fix-request      → sort issues into fix files      → /clear
-            /cdd:fix [fix-file]   → fix one module                  → /clear
+            /cdd:change-request   → sort changes into change files  → /clear
+            /cdd:change [file]    → process one module's changes    → /clear
             /cdd:verify [module]  → re-verify                       → /clear
             /cdd:test [module]    → re-test, re-mark complete       → /clear
             ... repeat fix/verify/test for each module ...

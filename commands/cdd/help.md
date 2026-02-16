@@ -49,17 +49,17 @@ POST-BUILD ADDITIONS
   /cdd:add-module       Scope new modules for a built system (interactive)
   /cdd:add-contract [m] Generate a locked contract for an added module
 
-RECOVERY & FIXES
-  /cdd:reset [module]   Abandon partial build, return to ready state
-  /cdd:contract-change  Formally request a contract modification
-  /cdd:audit            Full system contract compliance check
-  /cdd:fix-request      Triage issues into per-module fix files
-  /cdd:fix [fix-file]   Process one fix file (per-module surgery)
+RECOVERY & CHANGES
+  /cdd:reset [module]       Abandon partial build, return to ready state
+  /cdd:contract-change      Formally request a contract modification
+  /cdd:audit                Full system contract compliance check
+  /cdd:change-request       Sort changes into per-module change files
+  /cdd:change [change-file] Process one module's changes
 
 ───────────────────────────────────────────────────────────────
 WORKFLOW: init → brief → plan → modularize → contract
          → foundation → [build → verify → test]*
-         → audit → [fix-request → fix → verify → test]*
+         → audit → [change-request → change → verify → test]*
          → [add-module → add-contract → build → verify → test]*
 ───────────────────────────────────────────────────────────────
 ```

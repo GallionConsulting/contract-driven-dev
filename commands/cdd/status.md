@@ -118,7 +118,7 @@ Based on the current state, determine and display the recommended next step:
 - If any module is `failed`: suggest `/cdd:build [module]` or `/cdd:reset [module]`
 - If any module has `status: complete` but `verified: false` (post-fix state): suggest `/cdd:verify [module]`
 - If any module has `status: complete` and `verified: true` but `tested: false` (post-fix, re-verified): suggest `/cdd:test [module]`
-- If pending fix files exist in `.cdd/fixes/pending/`: mention them (e.g., "N pending fix file(s) — run `/cdd:fix [name]`")
+- If pending change files exist in `.cdd/changes/pending/`: mention them (e.g., "N pending change file(s) — run `/cdd:change [name]`")
 - If any module is buildable (pending + dependencies met): suggest `/cdd:build [module]`
 - If any module is built but not verified: suggest `/cdd:verify [module]`
 - If any module is verified but not tested: suggest `/cdd:test [module]`

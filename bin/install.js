@@ -594,8 +594,8 @@ async function install(targetDir, skipPrompt) {
   /cdd:audit            Full system audit
   /cdd:add-module       Scope new modules for a built system
   /cdd:add-contract     Generate contract for an added module
-  /cdd:fix-request      Triage issues into fix files
-  /cdd:fix              Process a per-module fix file
+  /cdd:change-request   Sort changes into per-module change files
+  /cdd:change           Process one module's changes
 
   GET STARTED
   ───────────

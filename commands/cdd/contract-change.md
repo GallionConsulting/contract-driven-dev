@@ -17,6 +17,8 @@ Formally modify a locked contract through a 5-step change process: identify the 
 <execution_context>
 You are running the `cdd:contract-change` command. This is a GOVERNANCE command — it controls contract modifications after lock.
 
+**Note:** Users may arrive here via a `CONTRACT_CHANGE_REQUIRED` verdict from `/cdd:change`. If so, check `.cdd/changes/completed/` for prior research context — the change file will contain detailed analysis of which contract clause is affected, why, and suggested changes. Use this context to pre-populate the change request.
+
 **Pre-conditions — check these FIRST:**
 1. Read `.cdd/state.yaml`
 2. Verify `planning.contract.locked: true` — if not, tell the user contracts are not yet locked. They can still edit contracts freely before running `cdd:contract`. Suggest running `cdd:contract` to finalize contracts first. Stop.

@@ -294,8 +294,8 @@ Recommended actions:
 
 Priority: Address ❌ failures first, then ⚠️ warnings.
 
-For code fixes: copy the issues above into /cdd:fix-request to
-generate per-module fix files, then process each with /cdd:fix.
+For code changes: copy the issues above into /cdd:change-request to
+generate per-module change files, then process each with /cdd:change.
 
 For contract issues: use /cdd:contract-change to update the contract.
 ───────────────────────────────────────────────────────────────
@@ -303,9 +303,9 @@ For contract issues: use /cdd:contract-change to update the contract.
 ───────────────────────────────────────────────────────────────
 👉 Next step:
    1. Run /clear to reset your context window
-   2. Run /cdd:fix-request with the issues listed above
-      to generate per-module fix files
-   3. Then process each fix file with /cdd:fix
+   2. Run /cdd:change-request with the issues listed above
+      to generate per-module change files
+   3. Then process each change file with /cdd:change
 
    /clear is STRONGLY recommended — this audit loaded
    significant context into your session.
