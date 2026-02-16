@@ -288,24 +288,24 @@ Recommended actions:
 ───────────────────────────────────────────────────────────────
 [Number each action:]
 1. [specific action — e.g., "Fix tenant scoping in grid-ui service layer"]
-   → Command: /cdd:build grid-ui (to remediate)
-
 2. [specific action — e.g., "Add missing created_by column to imports table"]
-   → Command: /cdd:contract-change (if contract needs updating)
-   → Or fix the migration directly (if contract is correct)
-
 3. [specific action]
-   → Command: [relevant cdd command]
-
 ...
 
 Priority: Address ❌ failures first, then ⚠️ warnings.
+
+For code fixes: copy the issues above into /cdd:fix-request to
+generate per-module fix files, then process each with /cdd:fix.
+
+For contract issues: use /cdd:contract-change to update the contract.
 ───────────────────────────────────────────────────────────────
 
 ───────────────────────────────────────────────────────────────
 👉 Next step:
    1. Run /clear to reset your context window
-   2. Address the highest-priority issue listed above
+   2. Run /cdd:fix-request with the issues listed above
+      to generate per-module fix files
+   3. Then process each fix file with /cdd:fix
 
    /clear is STRONGLY recommended — this audit loaded
    significant context into your session.

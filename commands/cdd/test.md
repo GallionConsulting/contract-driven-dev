@@ -243,7 +243,7 @@ Calculate percentage: `completed_modules / total_modules * 100`
 
 ### 8d. Check if ALL Modules Complete
 
-If `completed_modules == total_modules`:
+If ALL modules have `status: complete` AND `tested: true`:
 - This is the final module! Update state:
 ```yaml
 phase: complete

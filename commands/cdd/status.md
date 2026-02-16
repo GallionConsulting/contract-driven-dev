@@ -78,6 +78,10 @@ PROGRESS: [completed_count]/[total_count] modules complete
 
 CONTRACT CHANGES: [count from contract_changes array length]
 
+MODULE ADDITIONS: [count from module_additions array length, if > 0]
+  [For each addition in module_additions:]
+  [slug] — [N] module(s), [M] contracts pending
+
 CURRENT SESSION:
   [If any module has status: in_progress:]
   Module: [name], Session: [current_session], Phase: [build/verify/test based on progress]
@@ -112,10 +116,13 @@ Based on the current state, determine and display the recommended next step:
 **If phase is `build_cycle`:**
 - If any module is `in_progress`: suggest `/cdd:resume`
 - If any module is `failed`: suggest `/cdd:build [module]` or `/cdd:reset [module]`
+- If any module has `status: complete` but `verified: false` (post-fix state): suggest `/cdd:verify [module]`
+- If any module has `status: complete` and `verified: true` but `tested: false` (post-fix, re-verified): suggest `/cdd:test [module]`
+- If pending fix files exist in `.cdd/fixes/pending/`: mention them (e.g., "N pending fix file(s) — run `/cdd:fix [name]`")
 - If any module is buildable (pending + dependencies met): suggest `/cdd:build [module]`
 - If any module is built but not verified: suggest `/cdd:verify [module]`
 - If any module is verified but not tested: suggest `/cdd:test [module]`
-- If all modules are complete: suggest `/cdd:audit`
+- If all modules are complete and all `tested: true`: suggest `/cdd:audit`
 
 **If phase is `complete`:**
 - "Project is complete! Run `/cdd:audit` for a final cross-module check."

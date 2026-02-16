@@ -66,6 +66,74 @@ Load ONLY these files — do not read anything else:
 5. **Shared service interfaces:** For each entry in `requires.from_shared`, note the service name and method — these were built during foundations and should already exist.
 6. **Failed session handoff:** If the module status is `failed`, check for the most recent session file for this module in `.cdd/sessions/` and read its `context_for_next_session` and `issues_discovered` fields.
 
+## Step 4.5: Foundation Catch-up for Added Modules
+
+Check if this module was added after the initial foundation phase.
+
+**Detection:** Read `module_additions` from `.cdd/state.yaml`. If ANY entry's `modules` list contains this module name → it is an added module. If NOT found in `module_additions` → skip this step entirely and proceed to Step 5.
+
+**If this is an added module, check for missing foundations:**
+
+### Database Tables
+
+First, count the total missing foundations (tables without migrations + missing shared service methods). If 4 or more items are missing, display:
+```
+⚠ This module needs [N] foundation items (tables + shared services).
+  Recommend running /cdd:foundation db and /cdd:foundation shared
+  to handle this separately, then re-running /cdd:build [module].
+```
+Ask the user whether to proceed inline or split. If they choose to split, stop.
+
+For each table in the module contract's `data_ownership.owns`:
+1. Glob for existing migration files matching the table name (e.g., `*create_[table]*` in the migrations path from `config.yaml`)
+2. If NO migration exists for this table:
+   - Using the data contracts and system invariants already loaded in Step 4, generate a migration file following the same patterns as `cdd:foundation db` (Step 4a-Process):
+     - Framework-appropriate migration format
+     - All columns, types, constraints from the data contract
+     - Primary key type from system invariants
+     - Audit columns (created_at, updated_at, deleted_at if soft_delete)
+     - Indexes and foreign key constraints
+   - Run the migration command for the framework
+
+If any migration fails, report the error and stop. Do NOT proceed to implementation with missing tables.
+
+### Shared Services
+
+For each entry in the module contract's `requires.from_shared`:
+1. Check if the shared service file already exists (use framework conventions and `config.yaml` paths)
+2. If the service exists, check if the specific method exists in it
+3. If the service or method is MISSING:
+   - Compile the required interface from this module's contract (method name, parameters, return type)
+   - If the service file exists but the method is missing → add the method to the existing service
+   - If the service file doesn't exist → create it following the same patterns as `cdd:foundation shared` (Step 4e-Process)
+   - Register the service if newly created
+
+### Summary
+
+After completing catch-up work, display:
+
+```
+───────────────────────────────────────────────────────────────
+FOUNDATION CATCH-UP — [module-name]
+───────────────────────────────────────────────────────────────
+This module was added after initial foundations.
+
+[If tables created:]
+  Database migrations created and run:
+    - [migration-file] → [table-name]
+
+[If shared services created/updated:]
+  Shared services:
+    - [ServiceName].[method]() — created
+    - [ServiceName].[method]() — added to existing service
+
+[If nothing needed:]
+  No foundation catch-up needed — all dependencies already exist.
+───────────────────────────────────────────────────────────────
+```
+
+Proceed to Step 5.
+
 ## Step 5: Pre-flight Briefing
 
 Display a comprehensive briefing. This is NOT cosmetic — it forces internalization of the contract before writing any code.
