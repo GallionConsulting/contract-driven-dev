@@ -1,5 +1,8 @@
 # Contract-Driven Development (CDD)
 
+![Version](https://img.shields.io/badge/version-2.2.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 A command system for Claude Code that enforces interface contracts across multi-session AI-assisted builds. CDD prevents "project context exhaustion" by breaking work into isolated, contract-governed modules that can each be built in focused sessions.
 
 ## Why CDD?
@@ -135,7 +138,7 @@ After installation, the following is added to your Claude Code config directory:
 
 ```
 ~/.claude/
-  commands/cdd/       # 17 slash command files
+  commands/cdd/       # 16 slash command files
   cdd/
     templates/        # YAML/Markdown project templates
     workflows/        # Step-by-step procedure documents
@@ -268,20 +271,12 @@ Runs a 5-dimension check against the module's contract:
 /cdd:verify user-management
 ```
 
-#### `/cdd:test [module]` — Run module tests
+#### `/cdd:test [module]` — Run tests and mark complete
 
-Generates and/or runs tests derived from the module's contract. Tests verify the contract's behavioral expectations, not implementation details.
+Generates and/or runs tests derived from the module's contract. Tests verify the contract's behavioral expectations, not implementation details. When all tests pass, the module is automatically marked complete and you see which modules are now unblocked.
 
 ```
 /cdd:test user-management
-```
-
-#### `/cdd:complete [module]` — Mark a module done
-
-Marks the module as complete in `state.yaml` and identifies which modules are now unblocked (their `blocked_by` dependencies are all complete). Tells you what to build next.
-
-```
-/cdd:complete user-management
 ```
 
 ### Phase 4: Completion
@@ -392,9 +387,9 @@ your-project/
 ### Workflow at a Glance
 
 ```
-PLAN ──────────────────────────────────────────────── FOUNDATION ─── BUILD CYCLE ──── DONE
+PLAN ──────────────────────────────────────────────── FOUNDATION ─── BUILD CYCLE ── DONE
 init → brief → plan → modularize → contract    →    foundation  →  build/verify  →  audit
-                                                                    test/complete
+                                                                    test
 ```
 
 ### Command Quick Reference
@@ -409,8 +404,7 @@ init → brief → plan → modularize → contract    →    foundation  →  b
 | `/cdd:foundation [type]` | Foundation | Build infrastructure: `db`, `auth`, `tenant`, `middleware`, `shared`, `verify` |
 | `/cdd:build [module]` | Build Cycle | Implement a module from its contract |
 | `/cdd:verify [module]` | Build Cycle | Check implementation against contract (5 dimensions) |
-| `/cdd:test [module]` | Build Cycle | Generate and run contract-derived tests |
-| `/cdd:complete [module]` | Build Cycle | Mark done, see what's unblocked next |
+| `/cdd:test [module]` | Build Cycle | Run tests, mark complete, show what's unblocked |
 | `/cdd:audit` | Completion | Full system compliance check (4 dimensions) |
 | `/cdd:status` | Any | Show phase, progress, and budgets |
 | `/cdd:resume` | Any | Continue from session handoff file |
@@ -434,8 +428,7 @@ Session 9:  /cdd:foundation shared     → build shared       → /clear
 Session 10: /cdd:foundation verify     → confirm it works   → /clear
 Session 11: /cdd:build users      → implement module        → /clear
 Session 12: /cdd:verify users     → check contract          → /clear
-Session 13: /cdd:test users       → run tests               → /clear
-Session 14: /cdd:complete users   → mark done, see next     → /clear
+Session 13: /cdd:test users       → run tests, mark complete → /clear
             ... repeat build cycle for each module ...
 Final:      /cdd:audit            → full system check
 ```
@@ -445,7 +438,7 @@ Final:      /cdd:audit            → full system check
 - **Always `/clear` between commands** — state lives in files, not chat history
 - **One command per session** — each operates in a bounded context
 - **Contracts lock after `/cdd:contract`** — changes require `/cdd:contract-change`
-- **Build order follows dependencies** — `/cdd:complete` tells you what's unblocked
+- **Build order follows dependencies** — `/cdd:test` tells you what's unblocked when tests pass
 - **Load interfaces, not implementations** — when module B depends on A, only A's `provides` section is loaded
 - **Every table has one owner (or is a public table)** — writes are strictly enforced through ownership; reads are contracted to public columns and use framework-native patterns
 

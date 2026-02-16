@@ -115,7 +115,6 @@ Based on the current state, determine and display the recommended next step:
 - If any module is buildable (pending + dependencies met): suggest `/cdd:build [module]`
 - If any module is built but not verified: suggest `/cdd:verify [module]`
 - If any module is verified but not tested: suggest `/cdd:test [module]`
-- If any module is tested but not complete: suggest `/cdd:complete [module]`
 - If all modules are complete: suggest `/cdd:audit`
 
 **If phase is `complete`:**

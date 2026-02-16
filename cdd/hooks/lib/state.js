@@ -58,7 +58,7 @@ function parseSimpleYaml(text) {
           const v = parseYamlValue(itemContent.slice(colonIdx + 2).trim());
           obj[k] = v;
           arr.push(obj);
-          stack.push({ obj: obj, indent: indent + 2, arrayKey: null });
+          stack.push({ obj: obj, indent: indent + 1, arrayKey: null });
         } else {
           arr.push(parseYamlValue(itemContent));
         }
@@ -83,7 +83,7 @@ function parseSimpleYaml(text) {
     if (valueStr === '' || valueStr === '') {
       // Could be a nested object or block array — peek at next non-empty line
       const nextLine = peekNextContent(lines, i + 1);
-      if (nextLine && nextLine.trimmed.startsWith('- ')) {
+      if (nextLine && nextLine.trimmed.slice(nextLine.indent).startsWith('- ')) {
         // Block array
         parent[key] = [];
         stack.push({ obj: parent, indent: indent, arrayKey: key });

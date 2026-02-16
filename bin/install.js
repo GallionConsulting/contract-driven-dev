@@ -284,6 +284,13 @@ function registerHooks(targetDir) {
       hooks: [
         { type: 'command', command: hookCommand(targetDir, 'cdd/hooks/on-stop.js'), __source: CDD_SOURCE_MARKER }
       ]
+    },
+    {
+      event: 'Notification',
+      matcher: '',
+      hooks: [
+        { type: 'command', command: hookCommand(targetDir, 'cdd/hooks/on-notification.js'), __source: CDD_SOURCE_MARKER }
+      ]
     }
   ];
 
@@ -578,8 +585,7 @@ async function install(targetDir, skipPrompt) {
   /cdd:foundation       Build infrastructure foundations
   /cdd:build            Build a module from its contract
   /cdd:verify           Verify module against contract
-  /cdd:test             Run module tests
-  /cdd:complete         Mark module complete
+  /cdd:test             Run tests, mark module complete
   /cdd:status           Show project status
   /cdd:resume           Resume in-progress work
   /cdd:context          Load module context

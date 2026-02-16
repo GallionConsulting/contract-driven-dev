@@ -1,6 +1,6 @@
 ---
 name: cdd:test
-description: Generate and run tests for a verified module
+description: Generate and run tests for a verified module, then mark it complete
 allowed-tools:
   - Read
   - Write
@@ -171,27 +171,11 @@ modules:
     tested_at: "[ISO 8601 timestamp]"
     test_count: [number of tests]
     test_file: "[path to test file]"
+    status: complete
+    build_completed: "[ISO 8601 timestamp]"
 ```
 
-Display footer:
-```
-═══════════════════════════════════════════════════════════════
-✅ CDD:TEST COMPLETE — [module-name] ALL TESTS PASSED
-
-   [N] tests passed covering [functions/events/routes/data].
-   Module is verified and tested — ready for completion.
-
-───────────────────────────────────────────────────────────────
-👉 Recommended next step:
-   1. Run /clear to reset your context window
-   2. Then run /cdd:complete [module-name] to mark the
-      module as complete and see what's unblocked
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
-───────────────────────────────────────────────────────────────
-═══════════════════════════════════════════════════════════════
-```
+Then proceed to Step 8 (Module Completion).
 
 **If ANY FAIL:**
 
@@ -222,5 +206,140 @@ Do NOT update `tested` to true. Display:
 
 If failures are minor (e.g., simple assertion mismatches) and context budget is under 30% used, offer to fix them now:
 "These failures appear to be minor implementation bugs. Context is still low. Would you like me to fix the code and re-run tests now?"
+
+Stop here — do NOT proceed to Step 8.
+
+## Step 8: Module Completion
+
+This step runs automatically when all tests pass. It marks the module complete, identifies newly unblocked modules, and shows progress.
+
+### 8a. Identify Newly Unblocked Modules
+
+Scan ALL module contracts in `.cdd/contracts/modules/` — read ONLY the `blocked_by` field of each.
+
+For each module that is NOT yet complete:
+1. Read its `blocked_by` list
+2. Check if every module in that list now has `status: complete` in state.yaml
+3. If YES — this module is now unblocked and ready to build
+
+Compile the list of newly unblocked modules (those that were blocked before this completion but are now fully unblocked).
+
+### 8b. Identify Parallel-Eligible Modules
+
+From the newly unblocked modules (and any previously unblocked but not-yet-started modules):
+- Check the `parallel_groups` in state.yaml
+- Identify modules that can be built simultaneously (same parallel group, all dependencies met)
+
+### 8c. Calculate Progress
+
+Count:
+- `total_modules`: total number of modules in state.yaml
+- `completed_modules`: modules with `status: complete`
+- `in_progress_modules`: modules with `status: in_progress`
+- `pending_modules`: modules with `status: pending`
+- `failed_modules`: modules with `status: failed`
+
+Calculate percentage: `completed_modules / total_modules * 100`
+
+### 8d. Check if ALL Modules Complete
+
+If `completed_modules == total_modules`:
+- This is the final module! Update state:
+```yaml
+phase: complete
+completed_at: "[ISO 8601 timestamp]"
+```
+- Display the all-complete message (see 8f below)
+- Stop.
+
+### 8e. Display Completion Report
+
+```
+═══════════════════════════════════════════════════════════════
+✅ CDD:TEST COMPLETE — [module-name] ALL TESTS PASSED
+═══════════════════════════════════════════════════════════════
+
+   [N] tests passed covering [functions/events/routes/data].
+   Module marked complete.
+
+Progress: [completed]/[total] modules ([percentage]%)
+
+[Progress bar visualization:]
+[████████████░░░░░░░░] 60%
+
+───────────────────────────────────────────────────────────────
+NEWLY UNBLOCKED
+───────────────────────────────────────────────────────────────
+[For each newly unblocked module:]
+  🔓 [module-name] — ready to build
+     Dependencies: [list, all ✅]
+
+[If no newly unblocked modules:]
+  No new modules unblocked by this completion.
+
+───────────────────────────────────────────────────────────────
+PARALLEL ELIGIBLE
+───────────────────────────────────────────────────────────────
+[If multiple modules can be built simultaneously:]
+  These modules can be built in parallel (independent):
+  - [module-a]
+  - [module-b]
+
+[If only one module is next:]
+  Next in sequence: [module-name]
+
+───────────────────────────────────────────────────────────────
+ALL MODULES
+───────────────────────────────────────────────────────────────
+[For each module in build_order:]
+  [✅|🔨|⏸️|❌|🔒] [module-name] — [complete|in_progress|pending|failed|blocked]
+
+Legend: ✅ complete  🔨 in progress  ⏸️ ready  ❌ failed  🔒 blocked
+
+───────────────────────────────────────────────────────────────
+👉 Recommended next step:
+   1. Run /clear to reset your context window
+   2. Then run /cdd:build [recommended-module] to build
+      the next module
+
+   [If parallel eligible:]
+   Parallel option: [module-a] and [module-b] can be built
+   independently. You could build them in separate sessions.
+
+   /clear resets your context window to zero. The .cdd/ state
+   files carry everything forward — nothing is lost.
+───────────────────────────────────────────────────────────────
+═══════════════════════════════════════════════════════════════
+```
+
+The recommended module is:
+1. First newly unblocked module (if any)
+2. Otherwise, first pending module in build_order whose dependencies are met
+3. Otherwise, suggest checking status with `cdd:status`
+
+### 8f. All-Complete Footer
+
+If ALL modules are complete (from 8d), display instead:
+```
+═══════════════════════════════════════════════════════════════
+✅ CDD:TEST COMPLETE — [module-name] ALL TESTS PASSED
+
+🎉 ALL MODULES COMPLETE
+
+   Every module has been built, verified, and tested.
+   Total modules: [count]
+   Phase transition: build_cycle → complete
+
+───────────────────────────────────────────────────────────────
+👉 Recommended next step:
+   1. Run /clear to reset your context window
+   2. Then run /cdd:audit to perform a final
+      cross-module integration audit
+
+   /clear resets your context window to zero. The .cdd/ state
+   files carry everything forward — nothing is lost.
+───────────────────────────────────────────────────────────────
+═══════════════════════════════════════════════════════════════
+```
 
 </process>

@@ -38,8 +38,7 @@ FOUNDATION (sequential)
 BUILD CYCLE (repeating per module)
   /cdd:build [module]   Implement a module from its contract
   /cdd:verify [module]  Verify implementation matches contract
-  /cdd:test [module]    Run module tests
-  /cdd:complete [mod]   Mark module as complete
+  /cdd:test [module]    Run tests, then mark module complete
 
 SESSION MANAGEMENT
   /cdd:status           Show full project status
@@ -53,7 +52,7 @@ RECOVERY
 
 ───────────────────────────────────────────────────────────────
 WORKFLOW: init → brief → plan → modularize → contract
-         → foundation → [build → verify → test → complete]*
+         → foundation → [build → verify → test]*
          → audit
 ───────────────────────────────────────────────────────────────
 ```

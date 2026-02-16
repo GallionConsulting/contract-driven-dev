@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-02-15
+
+### Removed
+- `/cdd:complete` command — module completion is now handled automatically by `/cdd:test` when all tests pass
+
+### Changed
+- `/cdd:test` now marks the module complete, identifies newly unblocked modules, shows progress, and recommends the next module to build
+- Build cycle reduced from 4 steps (build → verify → test → complete) to 3 steps (build → verify → test)
+- Command count reduced from 17 to 16
+
 ## [2.1.0] - 2026-02-15
 
 ### Added
@@ -26,12 +36,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Initial public release.
 
 ### Added
-- 18 slash commands for contract-driven development workflow
+- 17 slash commands for contract-driven development workflow
 - Hook system: session-start, update-check, statusline, scope-guard, on-stop
 - Shared libraries: state management, notifications, transcript parsing
 - Zero-dependency installer (`bin/install.js`) targeting `~/.claude/`
 - Automatic update checking against npm registry
 - Statusline integration with ANSI escape codes (Windows-compatible)
 
+[2.2.0]: https://github.com/GallionConsulting/contract-driven-dev/releases/tag/v2.2.0
 [2.1.0]: https://github.com/GallionConsulting/contract-driven-dev/releases/tag/v2.1.0
 [2.0.0]: https://github.com/GallionConsulting/contract-driven-dev/releases/tag/v2.0.0
