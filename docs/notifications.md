@@ -329,7 +329,11 @@ set CDD_DEBUG=1 && claude
 debug: true
 ```
 
-The log file grows without bound, so disable debug mode when you're done. To clear it:
+The log file grows without bound, so disable debug mode when you're done.
+
+**To disable:** If you enabled via environment variable, simply restart Claude Code without it (or `unset CDD_DEBUG`). If you enabled via config, remove or comment out the `debug: true` line in `.cdd/config.yaml`.
+
+**To clear the log file:**
 
 ```bash
 rm .cdd/debug.log
