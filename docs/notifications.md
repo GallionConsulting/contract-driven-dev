@@ -306,13 +306,17 @@ notifications:
 
 All hooks and notifiers support debug logging. When enabled, they write detailed trace output to `.cdd/debug.log` in your project directory, including hook execution, event dispatch decisions, notifier matching, and HTTP response codes.
 
-**Enable via environment variable** (quick, temporary):
+Choose **one** of the two options below — you do not need both.
+
+#### Option A: Environment Variable (temporary, single session)
+
+Debug logging is active only for the session you launch. No files to clean up afterward.
 
 ```bash
 CDD_DEBUG=1 claude
 ```
 
-On Windows, set the variable first:
+On Windows:
 
 ```powershell
 # PowerShell
@@ -322,16 +326,22 @@ $env:CDD_DEBUG="1"; claude
 set CDD_DEBUG=1 && claude
 ```
 
-**Enable via config** (persistent, per-project):
+To disable, simply restart Claude Code without the variable (or run `unset CDD_DEBUG` before relaunching).
+
+#### Option B: Config File (persistent, per-project)
+
+Debug logging stays on across all sessions in this project until you remove the setting.
 
 ```yaml
 # .cdd/config.yaml
 debug: true
 ```
 
-The log file grows without bound, so disable debug mode when you're done.
+To disable, remove or comment out the `debug: true` line.
 
-**To disable:** If you enabled via environment variable, simply restart Claude Code without it (or `unset CDD_DEBUG`). If you enabled via config, remove or comment out the `debug: true` line in `.cdd/config.yaml`.
+---
+
+The log file grows without bound, so clear it when you're done debugging.
 
 **To clear the log file:**
 
