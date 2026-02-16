@@ -12,6 +12,7 @@
 const path = require('path');
 const { findCddRoot, readStateYaml, readConfigYaml, readModuleContract, readStdin } = require('./lib/state');
 const { dispatch, Status } = require('./lib/notify');
+const debug = require('./lib/debug');
 
 // Directories that are always allowed (shared/cross-cutting)
 const SHARED_DIRS = ['shared', 'common', 'lib', 'utils', 'helpers'];
@@ -120,9 +121,13 @@ async function main() {
     const config = readConfigYaml(cddRoot);
     const contract = readModuleContract(cddRoot, moduleName);
 
-    if (isInScope(relPath, moduleName, config, contract)) return;
+    if (isInScope(relPath, moduleName, config, contract)) {
+      debug.log(cddRoot, 'scope-guard', `In scope: ${relPath} (module: ${moduleName})`);
+      return;
+    }
 
     // Out of scope — output warning
+    debug.log(cddRoot, 'scope-guard', `Out of scope: ${relPath} (module: ${moduleName})`);
     const sourcePath = (config && config.paths && config.paths.source) || 'src';
     console.log(`[CDD] Warning: Writing to ${relPath} but active module is "${moduleName}" (${sourcePath}/${moduleName}/)`);
 
@@ -138,8 +143,8 @@ async function main() {
       message: `Out-of-scope write: ${relPath}`
     }, cddRoot);
 
-  } catch {
-    // Silent failure — never block tool execution
+  } catch (err) {
+    debug.log(findCddRoot(process.cwd()), 'scope-guard', 'Hook error', err);
   }
 }
 

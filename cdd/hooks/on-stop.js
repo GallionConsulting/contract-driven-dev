@@ -13,6 +13,7 @@ const path = require('path');
 const { findCddRoot, readStateYaml, readConfigYaml, readStdin } = require('./lib/state');
 const { dispatch, readStateFile, Status } = require('./lib/notify');
 const { findTranscriptPath, getLastClaudeMessage } = require('./lib/transcript');
+const debug = require('./lib/debug');
 
 const PHASE_LABELS = {
   planning: 'PLANNING',
@@ -50,8 +51,13 @@ async function main() {
     const cddRoot = findCddRoot(cwd);
     if (!cddRoot) return;
 
+    debug.log(cddRoot, 'on-stop', 'Hook fired', { cwd, sessionId });
+
     const state = readStateYaml(cddRoot);
-    if (!state) return;
+    if (!state) {
+      debug.log(cddRoot, 'on-stop', 'No state.yaml found');
+      return;
+    }
 
     const config = readConfigYaml(cddRoot);
     const projectName = (config && config.project_name) || path.basename(cwd);
@@ -65,6 +71,9 @@ async function main() {
       const transcriptPath = findTranscriptPath(sessionId);
       if (transcriptPath) {
         lastMessage = getLastClaudeMessage(transcriptPath);
+        debug.log(cddRoot, 'on-stop', 'Extracted last message from transcript', { length: lastMessage ? lastMessage.length : 0 });
+      } else {
+        debug.log(cddRoot, 'on-stop', 'No transcript found for session', sessionId);
       }
     }
 
@@ -85,8 +94,8 @@ async function main() {
       started_at: startedAt
     }, cddRoot);
 
-  } catch {
-    // Silent failure
+  } catch (err) {
+    debug.log(findCddRoot(process.cwd()), 'on-stop', 'Hook error', err);
   }
 }
 

@@ -11,6 +11,7 @@
 
 const { findCddRoot, readStateYaml, readConfigYaml, readStdin } = require('./lib/state');
 const { dispatch, Status } = require('./lib/notify');
+const debug = require('./lib/debug');
 
 // Phase display names
 const PHASE_LABELS = {
@@ -74,8 +75,13 @@ async function main() {
     const cddRoot = findCddRoot(cwd);
     if (!cddRoot) return; // Silent no-op for non-CDD projects
 
+    debug.log(cddRoot, 'session-start', 'Hook fired', { cwd, sessionId });
+
     const state = readStateYaml(cddRoot);
-    if (!state) return;
+    if (!state) {
+      debug.log(cddRoot, 'session-start', 'No state.yaml found');
+      return;
+    }
 
     const config = readConfigYaml(cddRoot);
     const projectName = (config && config.project_name) || require('path').basename(cwd);
@@ -118,7 +124,9 @@ async function main() {
     }
 
     // Output status to Claude
-    console.log(parts.join(' | '));
+    const statusLine = parts.join(' | ');
+    debug.log(cddRoot, 'session-start', `Output: ${statusLine}`);
+    console.log(statusLine);
 
     // Dispatch session_started event
     dispatch('session_started', {
@@ -135,8 +143,8 @@ async function main() {
       started_at: new Date().toISOString()
     }, cddRoot);
 
-  } catch {
-    // Silent failure — never break Claude Code startup
+  } catch (err) {
+    debug.log(findCddRoot(process.cwd()), 'session-start', 'Hook error', err);
   }
 }
 

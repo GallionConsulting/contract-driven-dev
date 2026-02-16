@@ -25,6 +25,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { findCddRoot, readStateYaml } = require('./lib/state');
+const debug = require('./lib/debug');
 
 // Marker file to track call count per session (Windows first-render workaround)
 const SESSION_MARKER_PATH = path.join(os.tmpdir(), 'cdd-statusline-session');
@@ -167,7 +168,7 @@ process.stdin.on('end', () => {
     const sep = ` \u2502 `;  // │ box-drawing separator (same as GSD)
     const output = parts.map(p => DIM + p + RESET).join(sep);
     process.stdout.write(output);
-  } catch {
-    // Silent fail — never break the status bar
+  } catch (err) {
+    debug.log(findCddRoot(process.cwd()), 'statusline', 'Render error', err);
   }
 });

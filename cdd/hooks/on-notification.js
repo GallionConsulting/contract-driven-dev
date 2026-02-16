@@ -13,6 +13,7 @@
 const path = require('path');
 const { findCddRoot, readStateYaml, readConfigYaml, readStdin } = require('./lib/state');
 const { dispatch, readStateFile, Status, Events } = require('./lib/notify');
+const debug = require('./lib/debug');
 
 const PHASE_LABELS = {
   planning: 'PLANNING',
@@ -92,9 +93,17 @@ async function main() {
     const cddRoot = findCddRoot(cwd);
     if (!cddRoot) return; // Silent no-op for non-CDD projects
 
+    const notificationType = (input && (input.type || input.notification_type)) || 'unknown';
+    debug.log(cddRoot, 'on-notification', 'Hook fired', { type: notificationType, cwd });
+
     // Map notification type to CDD event
     const mapped = mapNotificationType(input);
-    if (!mapped) return; // Not a notification type we dispatch
+    if (!mapped) {
+      debug.log(cddRoot, 'on-notification', `Ignoring notification type: ${notificationType}`);
+      return;
+    }
+
+    debug.log(cddRoot, 'on-notification', `Mapped ${notificationType} -> ${mapped.event}`);
 
     const state = readStateYaml(cddRoot);
     if (!state) return;
@@ -125,8 +134,8 @@ async function main() {
       started_at: startedAt
     }, cddRoot);
 
-  } catch {
-    // Silent failure — never break Claude Code
+  } catch (err) {
+    debug.log(findCddRoot(process.cwd()), 'on-notification', 'Hook error', err);
   }
 }
 

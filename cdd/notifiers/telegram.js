@@ -31,6 +31,7 @@
 'use strict';
 
 const https = require('https');
+const debug = require('../hooks/lib/debug');
 
 // ---------------------------------------------------------------------------
 // Stdin reader
@@ -174,8 +175,12 @@ async function main() {
   const payload = await readStdin();
   if (!payload) process.exit(0);
 
+  const cddRoot = payload._cdd_root || null;
+  debug.log(cddRoot, 'telegram', `Sending to chat ${chatId}`, { event: payload.event });
+
   const message = formatTelegramMessage(payload);
-  await sendTelegramMessage(token, chatId, message);
+  const status = await sendTelegramMessage(token, chatId, message);
+  debug.log(cddRoot, 'telegram', `Response status: ${status}`);
 }
 
 main().catch(() => {}).finally(() => process.exit(0));

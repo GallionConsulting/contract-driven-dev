@@ -14,7 +14,8 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { spawn } = require('child_process');
-const { readStdin, getCddVersion } = require('./lib/state');
+const { findCddRoot, readStdin, getCddVersion } = require('./lib/state');
+const debug = require('./lib/debug');
 
 const CACHE_DIR = path.join(os.homedir(), '.claude', 'cache');
 const CACHE_FILE = path.join(CACHE_DIR, 'cdd-update-check.json');
@@ -38,7 +39,11 @@ async function main() {
     await readStdin(1000);
 
     // Skip if cache is still fresh
-    if (isCacheFresh()) return;
+    if (isCacheFresh()) {
+      debug.log(findCddRoot(process.cwd()), 'update-check', 'Cache still fresh, skipping');
+      return;
+    }
+    debug.log(findCddRoot(process.cwd()), 'update-check', 'Cache stale, spawning check');
 
     // Spawn detached child to do the actual check
     // The child script is inline via -e to avoid needing another file
@@ -110,8 +115,8 @@ async function main() {
     child.unref();
     child.on('error', () => {});
 
-  } catch {
-    // Silent failure
+  } catch (err) {
+    debug.log(findCddRoot(process.cwd()), 'update-check', 'Hook error', err);
   }
 }
 

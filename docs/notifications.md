@@ -12,6 +12,7 @@ All hooks are installed automatically by the CDD installer and registered in you
 | Update Check | `SessionStart` | Checks npm for newer CDD versions in the background |
 | Status Line | `statusLine` | Renders a persistent status bar with phase, module, context usage |
 | Scope Guard | `PreToolUse` | Warns when Claude writes files outside the active module's path |
+| Notification | `Notification` | Maps Claude Code permission/input prompts to CDD notification events |
 | On Stop | `Stop` | Updates monitor state and dispatches notifications when Claude stops |
 
 ### Session Start
@@ -57,6 +58,18 @@ This is **advisory only** -- it never blocks Claude. Writes to the following pat
 - Shared/common directories (`shared/`, `common/`, `lib/`, `utils/`, `helpers/`)
 - The `.cdd/` directory
 - Config files at the project root
+
+### Notification
+
+When Claude Code sends a notification (permission prompts, idle alerts, elicitation dialogs), this hook maps it to a CDD event and dispatches it to configured notifiers. This is how `needs_input` and `needs_permission` events are generated -- the two most useful events for knowing when Claude is waiting for you.
+
+| Claude Code Notification | CDD Event |
+|--------------------------|-----------|
+| `permission_prompt`, `tool_permission`, `tool_approval` | `needs_permission` |
+| `idle_prompt`, `elicitation_dialog`, `notification` | `needs_input` |
+| Any other unrecognized type | `needs_input` |
+
+This hook produces no stdout output and never blocks Claude.
 
 ### On Stop
 
@@ -110,7 +123,15 @@ notifications:
 
 The `events` field controls which events trigger the notifier. Use an array of event names or `all` to receive everything.
 
-**Event names:** `session_started`, `running`, `stopped`, `scope_warning`, `needs_input`, `needs_permission`
+**Events:**
+
+| Event | Fired When | Hook |
+|-------|-----------|------|
+| `session_started` | Claude Code opens a CDD project | Session Start |
+| `stopped` | Claude finishes a response | On Stop |
+| `needs_input` | Claude asks a question or goes idle | Notification |
+| `needs_permission` | Claude needs tool approval | Notification |
+| `scope_warning` | Claude writes a file outside the active module | Scope Guard |
 
 ### Built-in Notifiers
 
@@ -123,11 +144,11 @@ notifications:
   enabled: true
   notifiers:
     - type: webhook
-      url: "https://hooks.slack.com/services/T.../B.../xxx"
+      url: "https://your-endpoint.example.com/hook"
       events: [stopped, needs_input]
 ```
 
-**Payload:** The full event state is POSTed as JSON:
+**Payload:** When no `body_template` is specified, the full event state is POSTed as JSON:
 
 ```json
 {
@@ -161,7 +182,25 @@ BUILD | Module: auth (3/7)
 Last: "Finished auth middleware. Ready for /cdd:verify auth"
 ```
 
-Any field from the event payload can be used: `{{event}}`, `{{phase}}`, `{{module}}`, `{{project}}`, `{{status}}`, `{{last_response}}`, `{{modules_complete}}`.
+Any field from the event payload can be used: `{{event}}`, `{{phase}}`, `{{module}}`, `{{project}}`, `{{status}}`, `{{last_response}}`, `{{modules_complete}}`. Scope warning events also include `{{warning_file}}` (the out-of-scope path) and `{{message}}` (a description of the warning).
+
+**Slack example** (Incoming Webhooks require a `text` field):
+
+```yaml
+- type: webhook
+  url: "https://hooks.slack.com/services/T.../B.../xxx"
+  events: [stopped, needs_input]
+  body_template: '{"text": "{{message}}"}'
+```
+
+**Discord example** (Discord Webhooks require a `content` field):
+
+```yaml
+- type: webhook
+  url: "https://discord.com/api/webhooks/123456/abcdef"
+  events: [stopped, needs_input]
+  body_template: '{"content": "{{message}}"}'
+```
 
 #### Telegram
 
@@ -257,3 +296,61 @@ notifications:
 - **Silent failure** -- If a notifier crashes, times out, or the URL is unreachable, nothing happens. No errors are shown to Claude or the user.
 - **State file first** -- The monitor state file (`.cdd/monitor/state.json`) is always written before notifiers are dispatched. Even if notifications are disabled, you can always poll the state file.
 - **Zero dependencies** -- All notifiers use Node.js built-in modules (`https`, `http`). No npm packages required.
+
+### Debug Mode
+
+All hooks and notifiers support debug logging. When enabled, they write detailed trace output to `.cdd/debug.log` in your project directory, including hook execution, event dispatch decisions, notifier matching, and HTTP response codes.
+
+**Enable via environment variable** (quick, temporary):
+
+```bash
+CDD_DEBUG=1 claude
+```
+
+**Enable via config** (persistent, per-project):
+
+```yaml
+# .cdd/config.yaml
+debug: true
+```
+
+The log file grows without bound, so disable debug mode when you're done. To clear it:
+
+```bash
+rm .cdd/debug.log
+```
+
+**Example output:**
+
+```
+[2026-02-16T10:30:00.000Z] [on-stop] Hook fired: {"cwd":"/path/to/project","sessionId":"abc123"}
+[2026-02-16T10:30:00.000Z] [on-stop] Extracted last message from transcript: {"length":47}
+[2026-02-16T10:30:00.000Z] [notify] Dispatch: stopped: {"status":"STOPPED","module":"auth"}
+[2026-02-16T10:30:00.000Z] [notify] State file written: {"status":"STOPPED","event":"stopped"}
+[2026-02-16T10:30:00.000Z] [notify] Spawning notifier: telegram: {"cmd":"node","args":"...telegram.js"}
+[2026-02-16T10:30:00.000Z] [notify] 1/1 notifiers matched event: stopped
+[2026-02-16T10:30:00.500Z] [telegram] Sending to chat 987654321: {"event":"stopped"}
+[2026-02-16T10:30:01.200Z] [telegram] Response status: 200
+```
+
+### Troubleshooting
+
+Since notifiers fail silently by design, use these steps to debug notification issues:
+
+1. **Check the state file.** Open `.cdd/monitor/state.json` in your project. If it exists and has recent timestamps, hooks are running correctly. If it's missing, your hooks may not be installed -- re-run the installer (`node bin/install.js`) from the CDD repository.
+
+2. **Verify your config.** Make sure `.cdd/config.yaml` has `notifications.enabled: true` and at least one notifier entry with a `type` and `events` field.
+
+3. **Test your webhook URL manually:**
+   ```bash
+   curl -X POST -H "Content-Type: application/json" \
+     -d '{"text": "test"}' \
+     "https://your-webhook-url"
+   ```
+
+4. **Check environment variables (Telegram).** Verify that `CDD_TELEGRAM_BOT_TOKEN` and `CDD_TELEGRAM_CHAT_ID` are set in the shell where Claude Code runs. Environment variables set in a different terminal session won't be visible.
+
+5. **Test a custom notifier directly:**
+   ```bash
+   echo '{"event":"stopped","project":"test"}' | node /path/to/my-notifier.js
+   ```

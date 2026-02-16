@@ -9,6 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 const { readConfigYaml } = require('./state');
+const debug = require('./debug');
 
 const MONITOR_DIR = 'monitor';
 const STATE_FILE = 'state.json';
@@ -25,7 +26,6 @@ const Status = {
 // Valid event names
 const Events = {
   SESSION_STARTED: 'session_started',
-  RUNNING: 'running',
   STOPPED: 'stopped',
   SCOPE_WARNING: 'scope_warning',
   NEEDS_INPUT: 'needs_input',
@@ -46,8 +46,10 @@ function writeStateFile(cddRoot, data) {
     fs.mkdirSync(monitorDir, { recursive: true });
     const statePath = path.join(monitorDir, STATE_FILE);
     fs.writeFileSync(statePath, JSON.stringify(data, null, 2), 'utf8');
+    debug.log(cddRoot, 'notify', 'State file written', { status: data.status, event: data.event });
     return true;
-  } catch {
+  } catch (err) {
+    debug.log(cddRoot, 'notify', 'Failed to write state file', err);
     return false;
   }
 }
@@ -72,7 +74,7 @@ function readStateFile(cddRoot) {
  * Spawn a notifier process detached with JSON payload on stdin.
  * Fire-and-forget: never waits, never throws.
  */
-function spawnNotifier(notifier, payloadJson) {
+function spawnNotifier(notifier, payloadJson, cddRoot) {
   try {
     let cmd, args;
 
@@ -88,6 +90,8 @@ function spawnNotifier(notifier, payloadJson) {
       args = [notifierPath];
     }
 
+    debug.log(cddRoot, 'notify', `Spawning notifier: ${notifier.type}`, { cmd, args: args.join(' ') });
+
     const child = spawn(cmd, args, {
       detached: true,
       stdio: ['pipe', 'ignore', 'ignore'],
@@ -102,9 +106,11 @@ function spawnNotifier(notifier, payloadJson) {
     }
 
     child.unref();
-    child.on('error', () => {}); // Swallow spawn errors
-  } catch {
-    // Silent failure — notifiers must never break hooks
+    child.on('error', (err) => {
+      debug.log(cddRoot, 'notify', `Notifier spawn error: ${notifier.type}`, err);
+    });
+  } catch (err) {
+    debug.log(cddRoot, 'notify', `Notifier spawn failed: ${notifier.type}`, err);
   }
 }
 
@@ -121,6 +127,8 @@ function spawnNotifier(notifier, payloadJson) {
  */
 function dispatch(event, payload, cddRoot) {
   try {
+    debug.log(cddRoot, 'notify', `Dispatch: ${event}`, { status: payload.status, module: payload.module });
+
     // 1. Always write state file
     const stateData = {
       ...payload,
@@ -131,12 +139,19 @@ function dispatch(event, payload, cddRoot) {
 
     // 2. Read config for notifier settings
     const config = readConfigYaml(cddRoot);
-    if (!config || !config.notifications || !config.notifications.enabled) return;
+    if (!config || !config.notifications || !config.notifications.enabled) {
+      debug.log(cddRoot, 'notify', 'Notifications disabled or not configured');
+      return;
+    }
 
     const notifiers = config.notifications.notifiers;
-    if (!Array.isArray(notifiers) || notifiers.length === 0) return;
+    if (!Array.isArray(notifiers) || notifiers.length === 0) {
+      debug.log(cddRoot, 'notify', 'No notifiers configured');
+      return;
+    }
 
     // 3. Spawn matching notifiers
+    let matched = 0;
     for (const notifier of notifiers) {
       if (!notifier.type) continue;
 
@@ -145,13 +160,16 @@ function dispatch(event, payload, cddRoot) {
       if (events === 'all' ||
           (Array.isArray(events) && events.includes(event)) ||
           events === event) {
-        // Include notifier config so the script knows its settings (url, port, etc.)
-        const payloadJson = JSON.stringify({ event, ...stateData, notifier_config: notifier });
-        spawnNotifier(notifier, payloadJson);
+        // Include notifier config and cddRoot so notifiers can debug-log too
+        const payloadJson = JSON.stringify({ event, ...stateData, notifier_config: notifier, _cdd_root: cddRoot });
+        spawnNotifier(notifier, payloadJson, cddRoot);
+        matched++;
       }
     }
-  } catch {
-    // Silent failure
+
+    debug.log(cddRoot, 'notify', `${matched}/${notifiers.length} notifiers matched event: ${event}`);
+  } catch (err) {
+    debug.log(cddRoot, 'notify', 'Dispatch failed', err);
   }
 }
 

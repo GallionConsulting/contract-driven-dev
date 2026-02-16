@@ -31,6 +31,7 @@
 const https = require('https');
 const http = require('http');
 const { URL } = require('url');
+const debug = require('../hooks/lib/debug');
 
 // ---------------------------------------------------------------------------
 // Stdin reader
@@ -143,8 +144,14 @@ async function main() {
   const payload = await readStdin();
   if (!payload) process.exit(0);
 
+  const cddRoot = payload._cdd_root || null;
   const config = payload.notifier_config;
-  if (!config || !config.url) process.exit(0);
+  if (!config || !config.url) {
+    debug.log(cddRoot, 'webhook', 'No URL configured, exiting');
+    process.exit(0);
+  }
+
+  debug.log(cddRoot, 'webhook', `Posting to ${config.url}`, { event: payload.event, hasTemplate: !!config.body_template });
 
   // Build request body
   let body;
@@ -154,12 +161,13 @@ async function main() {
     try { body = JSON.parse(expanded); }
     catch { body = expanded; } // If not valid JSON, send as raw string
   } else {
-    // Strip notifier_config from the payload before posting
-    const { notifier_config, ...eventData } = payload;
+    // Strip internal fields from the payload before posting
+    const { notifier_config, _cdd_root, ...eventData } = payload;
     body = eventData;
   }
 
-  await postJSON(config.url, body);
+  const status = await postJSON(config.url, body);
+  debug.log(cddRoot, 'webhook', `Response status: ${status}`);
 }
 
 main().catch(() => {}).finally(() => process.exit(0));
