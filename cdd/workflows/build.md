@@ -226,6 +226,28 @@ After displaying, confirm understanding:
 
 Wait for user confirmation before writing any code.
 
+## Step 5.5: Git Checkpoint
+
+Create a safety checkpoint before modifying any files:
+
+```bash
+node ~/.claude/cdd/hooks/lib/checkpoint.js build [module-name]
+```
+
+Parse the JSON output:
+- If `created: true` — display checkpoint notice, save `hash` for the session file (Step 12)
+- If `created: false` and `message: "not_git_repo"` — display warning: "Not a git repo — no checkpoint created. Consider `git init` for rollback capability." Continue.
+- If `created: false` and `message: "no_changes"` — silent, continue
+- If `created: false` and `error` — display warning with error text, continue
+
+When checkpoint is created, display:
+```
+───────────────────────────────────────────────────────────────
+CHECKPOINT: [hash]
+  To undo this build: git reset --hard [hash]
+───────────────────────────────────────────────────────────────
+```
+
 ## Step 6: Update State — Start Build
 
 Read `.cdd/state.yaml` and update:
@@ -375,6 +397,10 @@ context_for_next_session: |
   - What design decisions were made and why
   - Any gotchas or non-obvious details
   - What the next person should do (verify, test, or continue building)]
+
+checkpoint:
+  hash: "[hash from Step 5.5, or null if no checkpoint]"
+  rollback_cmd: "git reset --hard [hash]"  # null if no checkpoint
 
 context_metrics:
   files_read: [count]

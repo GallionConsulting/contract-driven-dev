@@ -1,6 +1,6 @@
 # Contract-Driven Development (CDD)
 
-![Version](https://img.shields.io/badge/version-2.6.0-blue)
+![Version](https://img.shields.io/badge/version-2.8.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 A slash-command toolkit for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that lets you build real, multi-module projects — the kind that are too big for a single conversation. You describe what you want, CDD breaks it into pieces with clear contracts between them, and then you build each piece in a focused session. Nothing gets lost between sessions because everything important lives in files, not chat history.
@@ -201,7 +201,7 @@ Claude will ask about your tech stack (language, framework, database), project p
 
 #### `/cdd:brief` — Capture your project vision
 
-A guided conversation where you describe what you want to build. Claude asks questions about users, features, data, and scope, then produces a vision document. How you talk to the brief matters — see the [Annotated Brief Example](docs/brief-interaction-guide.md) for a full walkthrough and the [Brief Cheat Sheet](docs/brief-cheat-sheet.md) for a quick reference on what to say, what to avoid, and how to handle future plans without bloating your MVP.
+A guided conversation where you describe what you want to build. Claude asks questions about users, features, data, and scope, then produces a vision document. How you talk to the brief matters — see the [Annotated Brief Example](docs/brief-interaction-guide.md) for a full walkthrough and the [Brief Cheat Sheet](docs/brief-cheat-sheet.md) for a quick reference on what to say, what to avoid, and how to handle future plans without bloating your project.
 
 ```
 /cdd:brief
@@ -320,6 +320,14 @@ Once all modules are complete, runs a full check across four areas:
 #### `/cdd:change-request [changes]` — Sort changes into per-module files
 
 When you have changes to make — bug fixes, UI tweaks, feature modifications, element removals — this command groups them into per-module YAML change files. Describe what you want changed; the command figures out which modules are affected. No code reading, no changes applied — just organized grouping by module and severity, written to `.cdd/changes/pending/`.
+
+Run it with changes inline, or run it bare to be prompted interactively:
+
+```
+/cdd:change-request
+```
+
+Or with changes provided directly:
 
 ```
 /cdd:change-request
@@ -548,6 +556,16 @@ Final:      /cdd:audit            → full system check               → /clear
 - **Build order follows dependencies** — `/cdd:test` tells you what's unblocked when tests pass
 - **Load interfaces, not code** — when module B depends on A, only A's `provides` section is loaded
 - **Every table has one owner (or is public)** — writes are strictly enforced through ownership; reads are contracted to public columns and use framework-native patterns
+
+### Git Checkpoints (Rollback)
+
+CDD automatically creates a git checkpoint commit before any code-modifying operation (`/cdd:build`, `/cdd:change`, `/cdd:foundation`, `/cdd:contract-change`). If something goes wrong, you can undo everything back to the pre-command state:
+
+```bash
+git reset --hard <checkpoint-hash>
+```
+
+Checkpoint commits use structured messages (`cdd(checkpoint): before build auth`) so they're easy to find in `git log`. If your project isn't a git repo, CDD warns you and continues — checkpoints are automatic when git is available, silent when it isn't.
 
 ## License
 

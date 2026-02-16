@@ -60,6 +60,28 @@ Also check if the requested foundation is already complete:
 - If `foundations.[type].status: complete`, tell the user: "Foundation `[type]` is already complete. Run `cdd:foundation [next-type]` or `cdd:foundation verify` to advance."
 - Stop (do not re-run a completed foundation).
 
+## Step 3.5: Git Checkpoint
+
+Create a safety checkpoint before modifying any files:
+
+```bash
+node ~/.claude/cdd/hooks/lib/checkpoint.js foundation [sub-type]
+```
+
+Parse the JSON output:
+- If `created: true` — display checkpoint notice
+- If `created: false` and `message: "not_git_repo"` — display warning: "Not a git repo — no checkpoint created. Consider `git init` for rollback capability." Continue.
+- If `created: false` and `message: "no_changes"` — silent, continue
+- If `created: false` and `error` — display warning with error text, continue
+
+When checkpoint is created, display:
+```
+───────────────────────────────────────────────────────────────
+CHECKPOINT: [hash]
+  To undo this foundation: git reset --hard [hash]
+───────────────────────────────────────────────────────────────
+```
+
 ## Step 4: Dispatch to Sub-type
 
 Based on the argument, jump to the appropriate section below.

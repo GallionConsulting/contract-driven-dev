@@ -22,6 +22,7 @@ You are running the `cdd:status` command. This is a READ-ONLY command — do NOT
 - `.cdd/state.yaml` — full state file
 - `.cdd/config.yaml` — project name and settings only
 - `.cdd/sessions/` — scan for most recent session file (names only, do not read contents)
+- `.cdd/changes/outstanding-contract-changes.yaml` — outstanding contract change tracking (if exists)
 
 **Context NOT loaded:**
 - Module contracts
@@ -41,6 +42,7 @@ Read `.cdd/state.yaml` and `.cdd/config.yaml`. Extract:
 - All module statuses
 - `build_order` and `parallel_groups`
 - `contract_changes` count
+- Read `.cdd/changes/outstanding-contract-changes.yaml` (if it exists)
 
 ## Step 2: Display Status Dashboard
 
@@ -77,6 +79,15 @@ PROGRESS: [completed_count]/[total_count] modules complete
 [████████████░░░░░░░░] [percentage]%
 
 CONTRACT CHANGES: [count from contract_changes array length]
+
+[If outstanding-contract-changes.yaml exists and has entries:]
+⚠️  OUTSTANDING CONTRACT CHANGES: [N]
+  [For each entry:]
+  • [module] — [description]
+    → [next_step]
+
+[If no outstanding file or empty:]
+OUTSTANDING CONTRACT CHANGES: 0
 
 MODULE ADDITIONS: [count from module_additions array length, if > 0]
   [For each addition in module_additions:]
@@ -126,6 +137,13 @@ Based on the current state, determine and display the recommended next step:
 
 **If phase is `complete`:**
 - "Project is complete! Run `/cdd:audit` for a final cross-module check."
+
+**Outstanding contract change priority check:**
+If outstanding contract changes exist AND the suggested next action is
+/cdd:verify or /cdd:test for an affected module, prepend:
+
+"⚠️ [module] has [N] outstanding contract change(s). Consider running
+ [next_step] first to resolve the contract mismatch."
 
 Display the suggestion:
 ```

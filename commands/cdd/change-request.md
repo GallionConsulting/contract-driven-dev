@@ -5,6 +5,7 @@ allowed-tools:
   - Read
   - Write
   - Glob
+  - AskUserQuestion
 ---
 
 <objective>
@@ -14,13 +15,13 @@ Parse change requests (from audit findings, code reviews, manual inspection, or 
 <execution_context>
 You are running the `cdd:change-request` command. This is a LIGHTWEIGHT TRIAGE command that writes structured change files.
 
-**Argument:** The user MUST provide a list of changes. Accepted formats:
+**Argument:** The user may provide a list of changes inline with the command. Accepted formats:
 - Markdown table with columns for module, change description, severity, and/or category
 - Numbered list (e.g., `1. module-name: description`)
 - Bullet list (e.g., `- module-name: description`)
 - Plain text paragraphs describing changes (will be parsed best-effort)
 
-If no changes are provided, display usage instructions and stop.
+If no changes are provided, enter interactive mode — ask the user to describe their changes. Accept the same formats listed above. Continue to Step 2 once you have their response.
 
 **Pre-conditions — check these FIRST:**
 1. Read `.cdd/state.yaml`
@@ -176,5 +177,3 @@ Module order follows build_order from state.yaml.
 ```
 
 </process>
-</output>
-</output>

@@ -30,6 +30,7 @@ You are running the `cdd:verify` command. This verifies that implemented code ma
 - Data contracts for tables this module owns or reads (from `.cdd/contracts/data/*.yaml`) — needed for data access verification
 - All implemented source files for this module
 - Session file for the most recent build session (to find file paths)
+- `.cdd/changes/outstanding-contract-changes.yaml` — to warn about unresolved contract changes
 
 **Context NOT loaded:**
 - Other modules' source code
@@ -55,6 +56,30 @@ If pre-conditions fail, explain why and suggest the correct next command. Stop.
 3. Find the most recent session file for this module in `.cdd/sessions/` — read it to get the list of `files_created` and `files_modified`
 4. Read ALL source files listed in the session file
 5. If no session file exists, use Glob/Grep to find the module's source files based on config.yaml paths and the module name
+6. Read `.cdd/changes/outstanding-contract-changes.yaml` (if it exists) and filter for entries matching this module
+
+## Step 2b: Outstanding Contract Change Warning
+
+If any entries in outstanding-contract-changes.yaml match this module:
+
+Display a prominent warning (do NOT block verification):
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ ⚠️  OUTSTANDING CONTRACT CHANGES for [module]           │
+│                                                         │
+│ This module has [N] unresolved contract change(s):      │
+│   • [description] → [next_step]                         │
+│                                                         │
+│ Verification will proceed against the CURRENT contract. │
+│ Results may include violations that would be resolved   │
+│ by the pending contract change.                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+Continue with verification. Do NOT block — the user may want to
+verify first to understand the full picture before deciding on
+the contract change.
 
 ## Step 3: Verification — Inputs
 

@@ -30,6 +30,7 @@ You are running the `cdd:contract-change` command. This is a GOVERNANCE command 
 - ALL module contracts in `.cdd/contracts/modules/*.yaml` — needed for impact analysis
 - `.cdd/contracts/system-invariants.yaml` — if the change targets system invariants
 - `.cdd/contracts/CHANGE-LOG.md` — to append the new entry
+- `.cdd/changes/outstanding-contract-changes.yaml` — to clear resolved items
 
 **Context NOT loaded:**
 - Source code files (not needed for contract changes)
@@ -211,6 +212,13 @@ Ask the user to type **APPROVE** or **CANCEL**.
 
 **On APPROVE:**
 
+0. **Git Checkpoint** — Create a safety checkpoint before modifying contracts:
+   ```bash
+   node ~/.claude/cdd/hooks/lib/checkpoint.js contract-change [contract-file-name]
+   ```
+   If `created: true`, display: "CHECKPOINT: [hash] — To undo: git reset --hard [hash]"
+   If checkpoint fails, display warning but continue.
+
 1. **Modify the contract file** — Read the contract YAML, apply the change, write back
 2. **Update contract version** — If the contract has a `version` field, increment it. If not, add `version: 2` (or increment from current)
 3. **Log to CHANGE-LOG.md** — Append a formatted entry to `.cdd/contracts/CHANGE-LOG.md`:
@@ -249,7 +257,14 @@ modules:
     tested: false
 ```
 
-6. **Display confirmation:**
+6. **Clear Outstanding Tracking:**
+   After applying the contract change and updating state.yaml:
+   - Read `.cdd/changes/outstanding-contract-changes.yaml` (if it exists)
+   - Remove any entries where `contract_file` matches the file just changed AND the change addresses the `contract_clause` listed
+   - If the outstanding list is now empty, delete the file
+   - If entries remain, write the updated file back
+
+7. **Display confirmation:**
 ```
 ═══════════════════════════════════════════════════════════════
 ✅ CONTRACT CHANGE #[N] APPLIED
