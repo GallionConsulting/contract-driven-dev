@@ -3,18 +3,19 @@
 ![Version](https://img.shields.io/badge/version-2.5.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-A command system for Claude Code that enforces interface contracts across multi-session AI-assisted builds. CDD prevents "project context exhaustion" by breaking work into isolated, contract-governed modules that can each be built in focused sessions.
+A slash-command toolkit for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that lets you build real, multi-module projects — the kind that are too big for a single conversation. You describe what you want, CDD breaks it into pieces with clear contracts between them, and then you build each piece in a focused session. Nothing gets lost between sessions because everything important lives in files, not chat history.
 
 ## Why CDD?
 
-When AI-assisted projects grow beyond a single conversation, they fall apart. Claude loses track of what was decided, modules step on each other's data, and interfaces drift. CDD solves this by:
+If you've ever tried to build something substantial with an AI assistant, you know the pattern: the first few sessions go great, then things start slipping. The AI forgets earlier decisions, modules start clashing, and you spend more time re-explaining context than writing code. CDD fixes this with a few simple ideas:
 
-- **Defining contracts before code** — every module's inputs, outputs, data access, and events are specified upfront
-- **Isolating sessions** — each command operates within a bounded context, never exceeding 40% of the context window
-- **Structured handoffs** — session files carry decisions and progress forward without relying on chat history
-- **Enforcing data ownership** — every table has one owner module. Writes go through the owner; reads are contracted against public columns. Public tables allow declared multi-writer access for shared data.
+- **Decide the interfaces first, then build** — before any code is written, every module's inputs, outputs, and data access are spelled out in a contract. This means no surprises when modules need to talk to each other.
+- **One focused session per task** — each command does one thing and stays well within the context window, so Claude never gets overwhelmed. You `/clear` between steps and pick up right where you left off.
+- **Progress lives in files, not chat history** — decisions, contracts, and handoff notes are all saved to your project's `.cdd/` directory. Close your terminal, come back tomorrow, and nothing is lost.
+- **Clear data ownership** — every database table belongs to one module. Other modules read from it through declared contracts. No more "who's writing to this table?" mysteries.
+- **Alerts when CDD needs you** — get a [Telegram message, Slack ping, or webhook](docs/notifications.md) when a step finishes or needs input, so you don't have to watch the terminal.
 
-CDD works best for **modular, data-driven systems** — REST APIs, SaaS platforms, admin panels, multi-tenant apps, or any project where clear module boundaries and interface contracts prevent cross-session drift.
+CDD is a great fit for **modular, data-driven projects** — REST APIs, SaaS platforms, admin panels, multi-tenant apps, or anything where you want clean boundaries between the parts of your system.
 
 ## Requirements
 
@@ -98,7 +99,7 @@ The installer will:
 
 - Detect your existing installation and show the current version
 - Warn you if you've modified any installed files since the last install
-- Remove orphaned files from previous versions that no longer exist
+- Remove leftover files from previous versions that no longer exist
 - Prompt for confirmation before overwriting
 
 To update without prompts, add `--yes`.
@@ -149,21 +150,41 @@ After installation, the following is added to your Claude Code config directory:
     cdd-manifest.json # File manifest for change detection
 ```
 
-The installer also registers hooks in your `settings.json` for session start detection, a status line, module scope warnings, and stop notifications. See [Hooks & Notifications](docs/notifications.md) for details and optional external alert configuration (Telegram, Slack, webhooks).
+The installer also registers hooks in your `settings.json` for session start detection, a status line, module scope warnings, and stop notifications.
+
+## Notifications
+
+CDD can send you alerts when a step finishes, needs input, or needs permission — so you don't have to sit and watch. Add a `notifications` section to your project's `.cdd/config.yaml`:
+
+```yaml
+notifications:
+  enabled: true
+  notifiers:
+    - type: telegram
+      events: [stopped, needs_input]
+```
+
+Built-in options:
+
+- **Webhook** — posts JSON to any URL (works with Slack, Discord, Zapier, n8n, etc.)
+- **Telegram** — sends messages straight to a Telegram chat via a bot
+- **Custom** — runs any command that reads JSON from stdin (write your own in any language)
+
+Notifications are off by default and entirely optional. See [Hooks & Notifications](docs/notifications.md) for full setup details.
 
 ---
 
 ## Usage
 
-CDD operates as a **phased state machine**. You progress through four phases in order, with each phase's commands building on the outputs of the previous phase. Every command is a Claude Code slash command — type it directly in your Claude Code session.
+CDD works as a **step-by-step workflow**. You move through four phases in order, and each phase's commands build on the outputs of the one before it. Every command is a Claude Code slash command — type it directly in your Claude Code session.
 
-**Critical workflow rule:** After each command completes, CDD recommends you run `/clear` to reset the conversation context before running the next command. State persists in `.cdd/` files, not in chat history. This is what prevents context exhaustion.
+**Important workflow rule:** After each command finishes, CDD recommends you run `/clear` to reset the conversation context before running the next command. State persists in `.cdd/` files, not in chat history. This is what keeps the context window from filling up.
 
 ### Phase 1: Planning
 
-Planning commands run sequentially. Each one produces a contract document that feeds into the next.
+Planning commands run one after another. Each one produces a document that feeds into the next.
 
-#### `/cdd:init` — Initialize a new project
+#### `/cdd:init` — Set up a new project
 
 Bootstraps CDD for your project. Creates the `.cdd/` directory with configuration and state files.
 
@@ -180,7 +201,7 @@ Claude will ask about your tech stack (language, framework, database), project p
 
 #### `/cdd:brief` — Capture your project vision
 
-An interactive discovery session where you describe what you want to build. Claude asks structured questions about users, features, data, and scope, then produces a vision document.
+A guided conversation where you describe what you want to build. Claude asks questions about users, features, data, and scope, then produces a vision document.
 
 ```
 /cdd:brief
@@ -188,9 +209,9 @@ An interactive discovery session where you describe what you want to build. Clau
 
 **Produces:** `.cdd/contracts/BRIEF.md`
 
-#### `/cdd:plan` — Transform brief into requirements
+#### `/cdd:plan` — Turn the brief into requirements
 
-Reads your brief and generates formal, numbered requirements organized by domain. Each requirement is specific enough to verify and trace to a module.
+Reads your brief and generates clear, numbered requirements grouped by area. Each requirement is specific enough to check and trace back to a module.
 
 ```
 /cdd:plan
@@ -200,7 +221,7 @@ Reads your brief and generates formal, numbered requirements organized by domain
 
 #### `/cdd:modularize` — Break the system into modules
 
-Analyzes requirements and identifies discrete modules with their dependencies, context budgets, and build order. Validates that dependencies form a DAG (no circular dependencies).
+Looks at the requirements and identifies separate modules with their dependencies, context budgets, and build order. Makes sure no modules depend on each other in circles.
 
 ```
 /cdd:modularize
@@ -210,7 +231,7 @@ Analyzes requirements and identifies discrete modules with their dependencies, c
 
 #### `/cdd:contract` — Generate interface contracts
 
-The heavyweight step. Generates all contract files: system invariants, per-module contracts (inputs, outputs, data access, events), data schema contracts, and an events registry. After this command, **all contracts are locked**.
+The big step. Generates all contract files: system-wide rules, per-module contracts (inputs, outputs, data access, events), data schema contracts, and an events registry. After this command, **all contracts are locked**.
 
 ```
 /cdd:contract
@@ -218,9 +239,9 @@ The heavyweight step. Generates all contract files: system invariants, per-modul
 
 **Reads:** `MODULES.md`, `REQUIREMENTS.md` | **Produces:**
 
-- `.cdd/contracts/system-invariants.yaml`
+- `.cdd/contracts/system-invariants.yaml` — rules that apply everywhere
 - `.cdd/contracts/modules/[module-name].yaml` (one per module)
-- `.cdd/contracts/data/[schema-name].yaml` (one per data domain)
+- `.cdd/contracts/data/[schema-name].yaml` (one per data area)
 - `.cdd/contracts/events-registry.yaml`
 - `.cdd/contracts/CHANGE-LOG.md`
 
@@ -241,15 +262,15 @@ Builds one foundation layer at a time. Available types depend on what you config
 /cdd:foundation verify      # Verify all foundations work together
 ```
 
-Run `verify` last — it confirms all foundation layers integrate correctly and transitions you to the build cycle.
+Run `verify` last — it confirms all foundation layers work together correctly and moves you to the build phase.
 
 ### Phase 3: Build Cycle
 
-Build commands repeat for each module. The order is governed by dependencies — you can only build a module once everything it depends on is complete.
+Build commands repeat for each module. The order follows dependencies — you can only build a module once everything it depends on is done.
 
-#### `/cdd:build [module]` — Implement a module
+#### `/cdd:build [module]` — Build a module
 
-Loads the module's contract and all dependency interfaces (never their source code — only what they `provide`). Implements the module to satisfy its contract within a single session.
+Loads the module's contract and all dependency interfaces (never their source code — only what they expose). Builds the module to match its contract within a single session.
 
 ```
 /cdd:build user-management
@@ -257,16 +278,16 @@ Loads the module's contract and all dependency interfaces (never their source co
 
 At session end, creates a handoff file in `.cdd/sessions/` so the next session can pick up where you left off if needed.
 
-**Context loading:** The build command loads only what's needed — the module contract, data contracts for tables this module owns/reads, dependency `provides` sections, and system invariants (including design guidelines) — staying within the 40% context budget.
+**What gets loaded:** The build command loads only what's needed — the module contract, data contracts for tables this module owns or reads, dependency `provides` sections, and system-wide rules (including design guidelines) — staying within the 40% context budget.
 
-#### `/cdd:verify [module]` — Verify contract compliance
+#### `/cdd:verify [module]` — Check contract compliance
 
-Runs a 5-dimension check against the module's contract:
+Runs a 5-point check against the module's contract:
 
-1. **Inputs** — Does the implementation accept everything the contract's `requires` section specifies?
-2. **Outputs** — Does it expose everything in `provides.functions`?
+1. **Inputs** — Does it accept everything the contract's `requires` section says it should?
+2. **Outputs** — Does it expose everything listed in `provides.functions`?
 3. **Dependencies** — Does it only import from declared dependencies?
-4. **Events** — Does it emit/handle only its contracted events?
+4. **Events** — Does it only emit and handle its contracted events?
 5. **Data access** — Does it only write to tables it owns? Are all reads declared?
 
 ```
@@ -275,54 +296,54 @@ Runs a 5-dimension check against the module's contract:
 
 #### `/cdd:test [module]` — Run tests and mark complete
 
-Generates and/or runs tests derived from the module's contract. Tests verify the contract's behavioral expectations, not implementation details. When all tests pass, the module is automatically marked complete and you see which modules are now unblocked.
+Generates and/or runs tests based on the module's contract. Tests check the contract's expected behavior, not how the code works internally. When all tests pass, the module is automatically marked complete and you see which modules are now unblocked.
 
 ```
 /cdd:test user-management
 ```
 
-### Phase 4: Completion & Remediation
+### Phase 4: Wrap-Up & Fixes
 
-#### `/cdd:audit` — Full system compliance check
+#### `/cdd:audit` — Full system check
 
-Once all modules are complete, runs a comprehensive 4-dimension audit across the entire system:
+Once all modules are complete, runs a full check across four areas:
 
-1. **System invariants** — Are all global rules enforced?
-2. **Data schema compliance** — Do all data access patterns match contracts?
-3. **Module contract compliance** — Does every module satisfy its contract?
-4. **Event wiring** — Are all events properly emitted and handled?
+1. **Global rules** — Are all system-wide rules being followed?
+2. **Data access** — Do all data reads and writes match what the contracts allow?
+3. **Module contracts** — Does every module do what its contract says?
+4. **Events** — Are all events properly sent and received?
 
 ```
 /cdd:audit
 ```
 
-#### `/cdd:fix-request [issues]` — Triage issues into fix files
+#### `/cdd:fix-request [issues]` — Sort issues into fix files
 
-When an audit or code review surfaces issues, this lightweight triage command parses them into per-module YAML fix files. No code reading, no fixes — just structured grouping. Issues are grouped by module, ordered by severity, and written to `.cdd/fixes/pending/`.
+When an audit or code review turns up problems, this command groups them into per-module YAML fix files. No code reading, no fixes — just organized grouping. Issues are sorted by module and severity, then written to `.cdd/fixes/pending/`.
 
 ```
 /cdd:fix-request
 ```
 
-Paste your issues as a markdown table, numbered list, or plain text. The command outputs a **run sheet** — a sequence of `/cdd:fix`, `/cdd:verify`, and `/cdd:test` commands to execute with `/clear` between each.
+Paste your issues as a markdown table, numbered list, or plain text. The command outputs a **run sheet** — a list of `/cdd:fix`, `/cdd:verify`, and `/cdd:test` commands to run with `/clear` between each.
 
-#### `/cdd:fix [fix-file]` — Process a per-module fix file
+#### `/cdd:fix [fix-file]` — Fix one module's issues
 
-Loads ONE fix file, researches each issue against the module's code and contract, delivers a verdict (CONFIRMED / FALSE_POSITIVE / CONTRACT_ISSUE / DEFERRED), and applies targeted fixes for confirmed issues. No inline verify/test — those run as separate sessions afterward.
+Loads ONE fix file, looks at each issue against the module's code and contract, gives a verdict (CONFIRMED / FALSE_POSITIVE / CONTRACT_ISSUE / DEFERRED), and applies fixes for confirmed issues. Verify and test run as separate sessions afterward.
 
 ```
 /cdd:fix auth-FIX-20260215-1030
 ```
 
-After fixing, the fix file moves to `.cdd/fixes/completed/` with verdicts and change records, and the module's `verified` and `tested` flags are reset, requiring re-verification and re-testing through the normal pipeline. This keeps each fix session focused.
+After fixing, the fix file moves to `.cdd/fixes/completed/` with verdicts and change records, and the module's `verified` and `tested` flags are reset so it goes through verify and test again. This keeps each fix session focused.
 
 ### Post-Build Additions
 
-When your project evolves beyond the original plan, these two commands add new modules without disrupting existing contracts.
+When your project grows beyond the original plan, these two commands add new modules without breaking existing contracts.
 
 #### `/cdd:add-module` — Scope new modules
 
-An interactive discovery session (like a mini `brief` + `plan` + `modularize`) that captures what you want to add, decomposes it into modules if needed, generates requirements, and produces an addition file. Run this once per batch of related features.
+A guided conversation (like a mini `brief` + `plan` + `modularize`) that captures what you want to add, breaks it into modules if needed, generates requirements, and produces an addition file. Run this once per batch of related features.
 
 ```
 /cdd:add-module
@@ -332,7 +353,7 @@ An interactive discovery session (like a mini `brief` + `plan` + `modularize`) t
 
 #### `/cdd:add-contract [module]` — Generate contract for an added module
 
-Generates the locked interface contract for one added module. Loads the addition file and dependency contracts, runs cross-reference verification, and logs the change. Run once per module with `/clear` between each.
+Generates the locked interface contract for one added module. Loads the addition file and dependency contracts, runs cross-reference checks, and logs the change. Run once per module with `/clear` between each.
 
 ```
 /cdd:add-contract slack-notifications
@@ -340,11 +361,11 @@ Generates the locked interface contract for one added module. Loads the addition
 
 **Produces:** `.cdd/contracts/modules/[module-name].yaml`, updates `events-registry.yaml` and data contracts, logs to `CHANGE-LOG.md`
 
-After all contracts are generated, the normal `build → verify → test` cycle handles implementation.
+After all contracts are generated, the normal `build → verify → test` cycle handles the rest.
 
 ### Utility Commands (Available Anytime)
 
-These commands work across all phases:
+These commands work in any phase:
 
 #### `/cdd:status` — Show project progress
 
@@ -354,15 +375,15 @@ Read-only overview of your project: current phase, module completion status, con
 /cdd:status
 ```
 
-#### `/cdd:resume` — Continue from a previous session
+#### `/cdd:resume` — Pick up from a previous session
 
-When you return to a project after closing Claude Code, this command reads the latest session handoff file and reconstructs context. No chat history needed.
+When you return to a project after closing Claude Code, this command reads the latest session handoff file and rebuilds context. No chat history needed.
 
 ```
 /cdd:resume
 ```
 
-#### `/cdd:context [module]` — View a module briefing
+#### `/cdd:context [module]` — Preview a module
 
 Loads and displays a module's contract, dependencies, and data access in a readable format — without starting a build. Useful for understanding what a module does before deciding to build it.
 
@@ -380,15 +401,15 @@ If a module build goes wrong, reset it back to `pending`. Logs the attempt and c
 
 #### `/cdd:contract-change` — Modify a locked contract
 
-Contracts lock after `/cdd:contract`. If you need to change one, this command enforces a heavyweight 5-step process:
+Contracts lock after `/cdd:contract`. If you need to change one, this command walks you through a strict 5-step process:
 
 1. Identify what's changing and why
-2. Impact analysis across all affected modules
+2. Check the impact on all affected modules
 3. Generate the contract diff
-4. Apply changes with full traceability
+4. Apply changes with a clear record
 5. Log the change in `CHANGE-LOG.md`
 
-This is intentionally difficult — every contract change represents a planning failure and risks cascading rework.
+This is meant to be hard — changing a contract means something was missed in planning, and it can cause extra work across other modules.
 
 ```
 /cdd:contract-change
@@ -417,18 +438,18 @@ your-project/
       [session-id].yaml          # What was done, what's next, decisions made
     contracts/
       BRIEF.md                   # Project vision (from /cdd:brief)
-      REQUIREMENTS.md            # Formal requirements (from /cdd:plan)
+      REQUIREMENTS.md            # Requirements list (from /cdd:plan)
       MODULES.md                 # Module breakdown (from /cdd:modularize)
-      system-invariants.yaml     # Global rules (from /cdd:contract)
+      system-invariants.yaml     # System-wide rules (from /cdd:contract)
       events-registry.yaml       # Event routing map (from /cdd:contract)
-      CHANGE-LOG.md              # Contract modification history
+      CHANGE-LOG.md              # Contract change history
       modules/
         [module-name].yaml       # Per-module contract: requires, provides, data access
       data/
         [schema-name].yaml       # Data schema: tables, columns, constraints, owners
     fixes/                       # Issue tracking (from /cdd:fix-request + /cdd:fix)
       pending/
-        [module]-FIX-[timestamp].yaml   # Issue batch awaiting processing
+        [module]-FIX-[timestamp].yaml   # Issue batch waiting to be processed
       completed/
         [module]-FIX-[timestamp].yaml   # Processed fix results with verdicts
     additions/                   # Post-build module additions (from /cdd:add-module)
@@ -445,7 +466,7 @@ your-project/
 PLAN                        init → brief → plan → modularize → contract
 FOUNDATION                  foundation db → auth → middleware → shared → verify
 BUILD CYCLE (per module)    build → verify → test
-AUDIT                       audit
+WRAP-UP                     audit
 
 FIX (if issues found)       fix-request → fix → verify → test   (per module)
 ADD (post-build)            add-module → add-contract → build → verify → test   (per module)
@@ -453,28 +474,28 @@ ADD (post-build)            add-module → add-contract → build → verify →
 
 ### Command Quick Reference
 
-| Command                      | Phase       | What It Does                                                                   |
-| ---------------------------- | ----------- | ------------------------------------------------------------------------------ |
-| `/cdd:init`                  | Planning    | Create `.cdd/` directory and configure project                                 |
-| `/cdd:brief`                 | Planning    | Interactive discovery, produces `BRIEF.md`                                     |
-| `/cdd:plan`                  | Planning    | Brief to formal requirements (`REQUIREMENTS.md`)                               |
-| `/cdd:modularize`            | Planning    | Requirements to modules with dependencies (`MODULES.md`)                       |
-| `/cdd:contract`              | Planning    | Generate and lock all interface contracts                                      |
-| `/cdd:foundation [type]`     | Foundation  | Build infrastructure: `db`, `auth`, `tenant`, `middleware`, `shared`, `verify` |
-| `/cdd:build [module]`        | Build Cycle | Implement a module from its contract                                           |
-| `/cdd:verify [module]`       | Build Cycle | Check implementation against contract (5 dimensions)                           |
-| `/cdd:test [module]`         | Build Cycle | Run tests, mark complete, show what's unblocked                                |
-| `/cdd:audit`                 | Completion  | Full system compliance check (4 dimensions)                                    |
-| `/cdd:fix-request [issues]`  | Remediation | Triage issues into per-module fix files                                        |
-| `/cdd:fix [fix-file]`        | Remediation | Process one fix file (research, verdict, fix)                                  |
-| `/cdd:add-module`            | Post-Build  | Scope new modules for a built system (interactive)                             |
-| `/cdd:add-contract [module]` | Post-Build  | Generate locked contract for an added module                                   |
-| `/cdd:status`                | Any         | Show phase, progress, and budgets                                              |
-| `/cdd:resume`                | Any         | Continue from session handoff file                                             |
-| `/cdd:context [module]`      | Any         | View module briefing without building                                          |
-| `/cdd:reset [module]`        | Any         | Abandon partial build, return to pending                                       |
-| `/cdd:contract-change`       | Any         | Modify a locked contract (heavyweight)                                         |
-| `/cdd:help`                  | Any         | Show command reference                                                         |
+| Command                      | Phase      | What It Does                                                               |
+| ---------------------------- | ---------- | -------------------------------------------------------------------------- |
+| `/cdd:init`                  | Planning   | Create `.cdd/` directory and configure project                             |
+| `/cdd:brief`                 | Planning   | Guided conversation, produces `BRIEF.md`                                   |
+| `/cdd:plan`                  | Planning   | Brief → numbered requirements (`REQUIREMENTS.md`)                          |
+| `/cdd:modularize`            | Planning   | Requirements → modules with dependencies (`MODULES.md`)                    |
+| `/cdd:contract`              | Planning   | Generate and lock all interface contracts                                  |
+| `/cdd:foundation [type]`     | Foundation | Build infrastructure: `db`, `auth`, `tenant`, `middleware`, `shared`, `verify` |
+| `/cdd:build [module]`        | Building   | Build a module from its contract                                           |
+| `/cdd:verify [module]`       | Building   | Check code against contract (5 points)                                     |
+| `/cdd:test [module]`         | Building   | Run tests, mark complete, show what's unblocked                            |
+| `/cdd:audit`                 | Wrap-Up    | Full system check (4 areas)                                                |
+| `/cdd:fix-request [issues]`  | Fixes      | Sort issues into per-module fix files                                      |
+| `/cdd:fix [fix-file]`        | Fixes      | Fix one module's issues (research, verdict, fix)                           |
+| `/cdd:add-module`            | Post-Build | Scope new modules for a built system (guided)                              |
+| `/cdd:add-contract [module]` | Post-Build | Generate locked contract for an added module                               |
+| `/cdd:status`                | Any        | Show phase, progress, and budgets                                          |
+| `/cdd:resume`                | Any        | Pick up from session handoff file                                          |
+| `/cdd:context [module]`      | Any        | Preview module contract without building                                   |
+| `/cdd:reset [module]`        | Any        | Abandon partial build, return to pending                                   |
+| `/cdd:contract-change`       | Any        | Modify a locked contract (strict process)                                  |
+| `/cdd:help`                  | Any        | Show command reference                                                     |
 
 ### Typical Session Flow
 
@@ -489,17 +510,19 @@ Session 7:  /cdd:foundation auth       → build auth         → /clear
 Session 8:  /cdd:foundation middleware → build middleware    → /clear
 Session 9:  /cdd:foundation shared     → build shared       → /clear
 Session 10: /cdd:foundation verify     → confirm it works   → /clear
-Session 11: /cdd:build users      → implement module        → /clear
+Session 11: /cdd:build users      → build module            → /clear
 Session 12: /cdd:verify users     → check contract          → /clear
 Session 13: /cdd:test users       → run tests, mark complete → /clear
             ... repeat build cycle for each module ...
-Final:      /cdd:audit            → full system check              → /clear
+Final:      /cdd:audit            → full system check               → /clear
+
             ... if issues found ...
-            /cdd:fix-request      → triage issues into fix files   → /clear
-            /cdd:fix [fix-file]   → fix one module                 → /clear
-            /cdd:verify [module]  → re-verify                      → /clear
-            /cdd:test [module]    → re-test, re-mark complete      → /clear
+            /cdd:fix-request      → sort issues into fix files      → /clear
+            /cdd:fix [fix-file]   → fix one module                  → /clear
+            /cdd:verify [module]  → re-verify                       → /clear
+            /cdd:test [module]    → re-test, re-mark complete       → /clear
             ... repeat fix/verify/test for each module ...
+
             ... if adding new features later ...
             /cdd:add-module       → scope new modules                → /clear
             /cdd:add-contract [m] → generate contract for module     → /clear
@@ -512,11 +535,11 @@ Final:      /cdd:audit            → full system check              → /clear
 ### Key Rules
 
 - **Always `/clear` between commands** — state lives in files, not chat history
-- **One command per session** — each operates in a bounded context
+- **One command per session** — each works in a bounded context
 - **Contracts lock after `/cdd:contract`** — changes require `/cdd:contract-change`
 - **Build order follows dependencies** — `/cdd:test` tells you what's unblocked when tests pass
-- **Load interfaces, not implementations** — when module B depends on A, only A's `provides` section is loaded
-- **Every table has one owner (or is a public table)** — writes are strictly enforced through ownership; reads are contracted to public columns and use framework-native patterns
+- **Load interfaces, not code** — when module B depends on A, only A's `provides` section is loaded
+- **Every table has one owner (or is public)** — writes are strictly enforced through ownership; reads are contracted to public columns and use framework-native patterns
 
 ## License
 
