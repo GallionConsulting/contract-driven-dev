@@ -314,7 +314,7 @@ Loads ONE fix file, researches each issue against the module's code and contract
 /cdd:fix auth-FIX-20260215-1030
 ```
 
-After fixing, the module's `verified` and `tested` flags are reset, requiring re-verification and re-testing through the normal pipeline. This keeps each fix session focused.
+After fixing, the fix file moves to `.cdd/fixes/completed/` with verdicts and change records, and the module's `verified` and `tested` flags are reset, requiring re-verification and re-testing through the normal pipeline. This keeps each fix session focused.
 
 ### Post-Build Additions
 
@@ -337,6 +337,8 @@ Generates the locked interface contract for one added module. Loads the addition
 ```
 /cdd:add-contract slack-notifications
 ```
+
+**Produces:** `.cdd/contracts/modules/[module-name].yaml`, updates `events-registry.yaml` and data contracts, logs to `CHANGE-LOG.md`
 
 After all contracts are generated, the normal `build → verify → test` cycle handles implementation.
 
@@ -424,6 +426,13 @@ your-project/
         [module-name].yaml       # Per-module contract: requires, provides, data access
       data/
         [schema-name].yaml       # Data schema: tables, columns, constraints, owners
+    fixes/                       # Issue tracking (from /cdd:fix-request + /cdd:fix)
+      pending/
+        [module]-FIX-[timestamp].yaml   # Issue batch awaiting processing
+      completed/
+        [module]-FIX-[timestamp].yaml   # Processed fix results with verdicts
+    additions/                   # Post-build module additions (from /cdd:add-module)
+      [slug].md                  # Addition scoping file
 ```
 
 ---
