@@ -65,6 +65,7 @@ Load ONLY these files — do not read anything else:
 4. **Dependency provides:** For each module listed in `requires.from_modules`, read ONLY the `provides` section of that module's contract at `.cdd/contracts/modules/[dep-name].yaml`. Do NOT read the full contract. Extract only the `provides.functions` entries that this module's contract references.
 5. **Shared service interfaces:** For each entry in `requires.from_shared`, note the service name and method — these were built during foundations and should already exist.
 6. **Failed session handoff:** If the module status is `failed`, check for the most recent session file for this module in `.cdd/sessions/` and read its `context_for_next_session` and `issues_discovered` fields.
+7. **Rebuild recommendation:** Check `.cdd/rebuild-recommendations/` for files matching `[module]-*.md`. If found, read the most recent one (by timestamp in filename). This is guidance from a previous `/cdd:verify-fix` session explaining what went wrong in the prior build and what to do differently. Treat this as high-priority context — the entire point of this rebuild is to address these issues.
 
 ## Step 4.5: Foundation Catch-up for Added Modules
 
@@ -217,6 +218,17 @@ CONTEXT BUDGET
 ───────────────────────────────────────────────────────────────
 Estimated ceiling: [from contract if specified, or "standard"]
 Files loaded: [count]
+
+[If rebuild recommendation was loaded in Step 4:]
+───────────────────────────────────────────────────────────────
+⚠️ REBUILD GUIDANCE (from previous verify-fix)
+───────────────────────────────────────────────────────────────
+[Full text of the rebuild recommendation file]
+
+This module is being rebuilt because the previous build failed
+verification. Pay close attention to the guidance above — it
+explains what went wrong and how to avoid the same mistakes.
+───────────────────────────────────────────────────────────────
 
 ═══════════════════════════════════════════════════════════════
 ```

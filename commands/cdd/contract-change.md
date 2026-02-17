@@ -19,6 +19,8 @@ You are running the `cdd:contract-change` command. This is a GOVERNANCE command 
 
 **Note:** Users may arrive here via a `CONTRACT_CHANGE_REQUIRED` verdict from `/cdd:change`. If so, check `.cdd/changes/completed/` for prior research context — the change file will contain detailed analysis of which contract clause is affected, why, and suggested changes. Use this context to pre-populate the change request.
 
+**Note:** Users may also arrive here via a `CONTRACT_CHANGE` verdict from `/cdd:verify-fix`. If so, check `.cdd/contract-change-recommendations/` for files matching `[module]-*.md`. If found, read the most recent one — it contains detailed analysis of why the contract needs changing, what should change (with options), and the previous verify failure report reference. Use this to pre-populate the change request in Step 1, reducing the investigation overhead while maintaining the full heavyweight gate.
+
 **Pre-conditions — check these FIRST:**
 1. Read `.cdd/state.yaml`
 2. Verify `planning.contract.locked: true` — if not, tell the user contracts are not yet locked. They can still edit contracts freely before running `cdd:contract`. Suggest running `cdd:contract` to finalize contracts first. Stop.
