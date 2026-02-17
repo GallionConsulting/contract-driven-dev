@@ -210,6 +210,28 @@ Cross-reference check: [PASSED / issues]
 
 Ask the user to **APPROVE** or **CANCEL**.
 
+## Step 7.5: Git Checkpoint (on APPROVE)
+
+Create a safety checkpoint before modifying any files:
+
+```bash
+node ~/.claude/cdd/hooks/lib/checkpoint.js add-contract [module-name]
+```
+
+Parse the JSON output:
+- If `created: true` — display checkpoint notice
+- If `created: false` and `message: "not_git_repo"` — display warning: "⚠ Not a git repo — no checkpoint created. Changes cannot be rolled back. Consider running `git init` first." Then **ask the user** if they want to continue without rollback capability or abort. If user aborts, stop immediately with no changes.
+- If `created: false` and `message: "no_changes"` — silent, continue
+- If `created: false` and `error` — display warning with error text. **Ask the user** if they want to continue without a checkpoint or abort.
+
+When checkpoint is created, display:
+```
+───────────────────────────────────────────────────────────────
+CHECKPOINT: [hash]
+  To undo this contract addition: git reset --hard [hash]
+───────────────────────────────────────────────────────────────
+```
+
 ## Step 8: Apply Changes (on APPROVE)
 
 Write all files:

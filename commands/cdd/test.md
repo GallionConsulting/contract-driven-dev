@@ -76,6 +76,28 @@ If tests exist, run them using the test runner from `config.yaml`:
 **If all pass:** Note the passing count and proceed to coverage check (Step 5)
 **If any fail:** Report failures and stop — do not generate more tests until existing ones pass
 
+## Step 4.5: Git Checkpoint
+
+Create a safety checkpoint before generating test files:
+
+```bash
+node ~/.claude/cdd/hooks/lib/checkpoint.js test [module-name]
+```
+
+Parse the JSON output:
+- If `created: true` — display checkpoint notice
+- If `created: false` and `message: "not_git_repo"` — display warning: "⚠ Not a git repo — no checkpoint created. Changes cannot be rolled back. Consider running `git init` first." Then **ask the user** if they want to continue without rollback capability or abort. If user aborts, stop immediately with no changes.
+- If `created: false` and `message: "no_changes"` — silent, continue
+- If `created: false` and `error` — display warning with error text. **Ask the user** if they want to continue without a checkpoint or abort.
+
+When checkpoint is created, display:
+```
+───────────────────────────────────────────────────────────────
+CHECKPOINT: [hash]
+  To undo this test generation: git reset --hard [hash]
+───────────────────────────────────────────────────────────────
+```
+
 ## Step 5: Generate Contract-Derived Tests
 
 For each entry in the module contract, generate appropriate tests. Follow the test framework conventions from `config.yaml`.

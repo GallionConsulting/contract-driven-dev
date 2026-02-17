@@ -236,9 +236,9 @@ node ~/.claude/cdd/hooks/lib/checkpoint.js build [module-name]
 
 Parse the JSON output:
 - If `created: true` — display checkpoint notice, save `hash` for the session file (Step 12)
-- If `created: false` and `message: "not_git_repo"` — display warning: "Not a git repo — no checkpoint created. Consider `git init` for rollback capability." Continue.
+- If `created: false` and `message: "not_git_repo"` — display warning: "⚠ Not a git repo — no checkpoint created. Changes cannot be rolled back. Consider running `git init` first." Then **ask the user** if they want to continue without rollback capability or abort. If user aborts, stop immediately with no changes.
 - If `created: false` and `message: "no_changes"` — silent, continue
-- If `created: false` and `error` — display warning with error text, continue
+- If `created: false` and `error` — display warning with error text. **Ask the user** if they want to continue without a checkpoint or abort.
 
 When checkpoint is created, display:
 ```

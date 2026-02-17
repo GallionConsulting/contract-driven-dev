@@ -45,6 +45,7 @@ Example: /cdd:change auth-CHG-20260215-1030
 - Data contracts for tables this module owns or reads (`.cdd/contracts/data/*.yaml`)
 - System invariants (`.cdd/contracts/system-invariants.yaml`)
 - `.cdd/config.yaml`
+- `.cdd/changes/outstanding-contract-changes.yaml` — if it exists, filtered to this module
 
 **Context NOT loaded:**
 - Other modules' source code
@@ -62,6 +63,23 @@ Example: /cdd:change auth-CHG-20260215-1030
 4. Read `.cdd/contracts/system-invariants.yaml`
 5. Read data contracts for this module's `data_ownership` tables (from `.cdd/contracts/data/*.yaml`)
 6. Find and read module source files — check `.cdd/sessions/` for the latest session file listing `files_created`/`files_modified`, or use Glob based on config.yaml paths
+7. Read `.cdd/changes/outstanding-contract-changes.yaml` (if it exists) and filter for entries matching this module
+
+## Step 1b: Outstanding Contract Change Warning
+
+If any entries in outstanding-contract-changes.yaml match this module, display a warning (do NOT block — proceed with processing):
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ ⚠️  OUTSTANDING CONTRACT CHANGES for [module]            │
+│                                                         │
+│ This module has [N] unresolved contract change(s):      │
+│   • [description] → [next_step]                         │
+│                                                         │
+│ Changes will be applied against the CURRENT contract.   │
+│ Some issues may overlap with pending contract changes.  │
+└─────────────────────────────────────────────────────────┘
+```
 
 ## Step 1.5: Git Checkpoint
 
@@ -73,9 +91,9 @@ node ~/.claude/cdd/hooks/lib/checkpoint.js change [batch-id]
 
 Parse the JSON output:
 - If `created: true` — display checkpoint notice
-- If `created: false` and `message: "not_git_repo"` — display warning: "Not a git repo — no checkpoint created. Consider `git init` for rollback capability." Continue.
+- If `created: false` and `message: "not_git_repo"` — display warning: "⚠ Not a git repo — no checkpoint created. Changes cannot be rolled back. Consider running `git init` first." Then **ask the user** if they want to continue without rollback capability or abort. If user aborts, stop immediately with no changes.
 - If `created: false` and `message: "no_changes"` — silent, continue
-- If `created: false` and `error` — display warning with error text, continue
+- If `created: false` and `error` — display warning with error text. **Ask the user** if they want to continue without a checkpoint or abort.
 
 When checkpoint is created, display:
 ```
@@ -269,6 +287,25 @@ data contracts):**
    ```
 
 6. Report generated impact files in the Step 7 summary output.
+
+## Step 4c: Post-Change Contract Check
+
+After all ACTIONABLE changes are applied, verify the modified code
+still complies with contracts. This uses already-loaded context only
+— no new file reads.
+
+For each file modified in Step 4, check:
+
+1. **Data writes** — no new writes to tables outside `data_ownership.writes`
+2. **Data reads** — no new reads from undeclared tables or private columns on non-owned standard tables
+3. **Function signatures** — `provides.functions` signatures unchanged (names, params, return types)
+4. **Response shapes** — API responses still match contracted output structures
+5. **System invariants** — error format, response envelope, auth middleware still applied correctly
+6. **No cross-module imports** — no new imports from other modules' directories
+
+If any check fails: **REVERT** the offending change, reclassify the
+issue as `CONTRACT_CHANGE_REQUIRED` or `DEFERRED`, and document what
+was caught. Update the verdict in the change file output accordingly.
 
 ## Step 5: Update Change File
 

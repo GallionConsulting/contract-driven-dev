@@ -31,6 +31,7 @@ If no changes are provided, enter interactive mode — ask the user to describe 
 **Context loaded (LIGHTWEIGHT):**
 - `.cdd/state.yaml` — for module names, statuses, and build_order
 - `.cdd/config.yaml` — for project name only
+- `.cdd/changes/outstanding-contract-changes.yaml` — if it exists, for warning display
 
 **Context NOT loaded:**
 - Module contracts
@@ -48,6 +49,25 @@ Read `.cdd/state.yaml` and `.cdd/config.yaml`. Verify:
 - At least one module has `status: complete`
 
 If pre-conditions fail, explain why and suggest the correct next command. Stop.
+
+## Step 1b: Outstanding Contract Change Warning
+
+Read `.cdd/changes/outstanding-contract-changes.yaml` (if it exists). If any entries are present, display a warning grouped by module (do NOT block — this is informational):
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ ⚠️  OUTSTANDING CONTRACT CHANGES                         │
+│                                                         │
+│ These modules have unresolved contract change requests:  │
+│   • [module]: [description] → [next_step]               │
+│                                                         │
+│ New changes for these modules may conflict with or be   │
+│ superseded by the pending contract changes. Consider    │
+│ resolving them first with /cdd:contract-change.         │
+└─────────────────────────────────────────────────────────┘
+```
+
+Continue with triage regardless — the user may be intentionally batching changes.
 
 ## Step 2: Parse Changes
 

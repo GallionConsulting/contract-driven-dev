@@ -121,6 +121,28 @@ context_for_next_session: |
   Fresh build recommended.
 ```
 
+## Step 5.5: Git Checkpoint (if deleting files)
+
+If the user chose to delete partial files, create a safety checkpoint first:
+
+```bash
+node ~/.claude/cdd/hooks/lib/checkpoint.js reset [module-name]
+```
+
+Parse the JSON output:
+- If `created: true` — display checkpoint notice
+- If `created: false` and `message: "not_git_repo"` — display warning: "⚠ Not a git repo — no checkpoint created. Deleted files cannot be recovered. Consider running `git init` first." Then **ask the user** if they want to continue without rollback capability or abort. If user aborts, stop immediately with no changes.
+- If `created: false` and `message: "no_changes"` — silent, continue
+- If `created: false` and `error` — display warning with error text. **Ask the user** if they want to continue without a checkpoint or abort.
+
+When checkpoint is created, display:
+```
+───────────────────────────────────────────────────────────────
+CHECKPOINT: [hash]
+  To undo this reset: git reset --hard [hash]
+───────────────────────────────────────────────────────────────
+```
+
 ## Step 6: Delete Partial Files (if requested)
 
 If the user chose to delete partial files:

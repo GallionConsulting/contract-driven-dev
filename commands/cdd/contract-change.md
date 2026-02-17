@@ -216,8 +216,10 @@ Ask the user to type **APPROVE** or **CANCEL**.
    ```bash
    node ~/.claude/cdd/hooks/lib/checkpoint.js contract-change [contract-file-name]
    ```
-   If `created: true`, display: "CHECKPOINT: [hash] — To undo: git reset --hard [hash]"
-   If checkpoint fails, display warning but continue.
+   - If `created: true`, display: "CHECKPOINT: [hash] — To undo: git reset --hard [hash]"
+   - If `created: false` and `message: "not_git_repo"` — display warning: "⚠ Not a git repo — no checkpoint created. Changes cannot be rolled back. Consider running `git init` first." Then **ask the user** if they want to continue without rollback capability or abort. If user aborts, stop immediately with no changes.
+   - If `created: false` and `message: "no_changes"` — silent, continue
+   - If `created: false` and `error` — display warning with error text. **Ask the user** if they want to continue without a checkpoint or abort.
 
 1. **Modify the contract file** — Read the contract YAML, apply the change, write back
 2. **Update contract version** — If the contract has a `version` field, increment it. If not, add `version: 2` (or increment from current)

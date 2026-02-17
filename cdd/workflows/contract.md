@@ -462,6 +462,28 @@ Ask: "Please review the contracts. I'll show any specific contract in detail if 
 
 Allow modifications until the user approves.
 
+## Step 8.5: Git Checkpoint
+
+Create a safety checkpoint before locking contracts:
+
+```bash
+node ~/.claude/cdd/hooks/lib/checkpoint.js contract
+```
+
+Parse the JSON output:
+- If `created: true` — display checkpoint notice
+- If `created: false` and `message: "not_git_repo"` — display warning: "⚠ Not a git repo — no checkpoint created. Changes cannot be rolled back. Consider running `git init` first." Then **ask the user** if they want to continue without rollback capability or abort. If user aborts, stop immediately with no changes.
+- If `created: false` and `message: "no_changes"` — silent, continue
+- If `created: false` and `error` — display warning with error text. **Ask the user** if they want to continue without a checkpoint or abort.
+
+When checkpoint is created, display:
+```
+───────────────────────────────────────────────────────────────
+CHECKPOINT: [hash]
+  To undo this contract generation: git reset --hard [hash]
+───────────────────────────────────────────────────────────────
+```
+
 ## Step 9: Lock Contracts
 
 After approval:
