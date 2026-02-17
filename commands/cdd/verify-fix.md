@@ -33,8 +33,9 @@ If no failure reports exist, say "No verify failure reports found. Run `/cdd:ver
 1. Read `.cdd/state.yaml`
 2. Verify `phase: build_cycle`
 3. Verify the module contract exists at `.cdd/contracts/modules/[module].yaml`
-4. Find the most recent failure report for this module in `.cdd/verify-failures/` — if none exists, say "No failure report found for [module]. Run `/cdd:verify [module]` first." and stop.
-5. Verify the module's build is complete — this command fixes built code, not in-progress builds.
+4. Verify the module's `verified` field is explicitly `false` (meaning `/cdd:verify` ran and failed). If `verified` is `true`, say "Module [module] already passed verification — nothing to fix." and stop. If `verified` is absent or null, say "Module [module] has not been verified yet. Run `/cdd:verify [module]` first." and stop.
+5. Find the most recent failure report for this module in `.cdd/verify-failures/` — if none exists, say "No failure report found for [module]. Run `/cdd:verify [module]` first." and stop.
+6. Verify the module's build is complete — this command fixes built code, not in-progress builds.
 
 **Context loaded — DELIBERATELY MINIMAL:**
 - Failure report (`.cdd/verify-failures/[module]-[timestamp].yaml`) — small, structured
@@ -57,6 +58,7 @@ If no failure reports exist, say "No verify failure reports found. Run `/cdd:ver
 Read `.cdd/state.yaml`. Verify:
 - `phase` is `build_cycle`
 - Module contract exists at `.cdd/contracts/modules/[module].yaml`
+- Module's `verified` field is explicitly `false` — this confirms `/cdd:verify` ran and found failures. If `verified` is `true`, the module already passed. If `verified` is absent/null, verification hasn't been run yet. Either way, stop with a clear message.
 - Module build is complete
 
 Find the most recent failure report for this module by globbing `.cdd/verify-failures/[module]-*.yaml` and selecting the newest by timestamp.

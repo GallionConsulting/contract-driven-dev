@@ -278,7 +278,14 @@ Display footer:
 
 **If ANY FAIL:**
 
-Do NOT update `verified` to true.
+Update `.cdd/state.yaml` to mark the module as verify-failed:
+```yaml
+modules:
+  [module]:
+    verified: false
+    verified_at: "[ISO 8601 timestamp]"
+    verification_checks: [total check count]
+```
 
 **Persist failure report to disk.** Write a YAML file to `.cdd/verify-failures/[module]-[ISO-timestamp].yaml` containing:
 

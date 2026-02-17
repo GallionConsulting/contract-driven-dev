@@ -1,6 +1,6 @@
 # Contract-Driven Development (CDD)
 
-![Version](https://img.shields.io/badge/version-2.8.0-blue)
+![Version](https://img.shields.io/badge/version-3.0.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 A slash-command toolkit for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that lets you build real, multi-module projects — the kind that are too big for a single conversation. You describe what you want, CDD breaks it into pieces with clear contracts between them, and then you build each piece in a focused session. Nothing gets lost between sessions because everything important lives in files, not chat history.
@@ -299,7 +299,9 @@ Verify is **report-only** — it judges the code but does not fix it. When failu
 /cdd:verify user-management
 ```
 
-#### `/cdd:verify-fix [module]` — Triage and resolve verify failures
+#### `/cdd:verify-fix [module]` — Triage and resolve verify failures *(on-demand)*
+
+> **Don't run this directly.** This command is invoked only when `/cdd:verify` detects failures and tells you to run it.
 
 Reads the persisted failure report from `/cdd:verify`, deep-dives into the failing code, and makes a triage verdict — one of three resolution paths:
 
@@ -535,7 +537,7 @@ EXPLORE (anytime)           explore [topic]
 | `/cdd:foundation [type]`     | Foundation | Build infrastructure: `db`, `auth`, `tenant`, `middleware`, `shared`, `verify` |
 | `/cdd:build [module]`        | Building   | Build a module from its contract (picks up rebuild recommendations)        |
 | `/cdd:verify [module]`       | Building   | Check code against contract (6 dimensions, report-only)                    |
-| `/cdd:verify-fix [module]`   | Building   | Triage verify failures → fix, rebuild, or contract change                  |
+| `/cdd:verify-fix [module]`   | Building   | *(on-demand)* Triage verify failures → fix, rebuild, or contract change    |
 | `/cdd:test [module]`         | Building   | Run tests, mark complete, show what's unblocked                            |
 | `/cdd:audit`                 | Wrap-Up    | Full system check (4 areas)                                                |
 | `/cdd:change-request [changes]` | Changes | Sort changes into per-module change files                                |
