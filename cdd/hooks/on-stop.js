@@ -13,6 +13,7 @@ const path = require('path');
 const { findCddRoot, readStateYaml, readConfigYaml, readStdin } = require('./lib/state');
 const { dispatch, readStateFile, Status } = require('./lib/notify');
 const { findTranscriptPath, getLastClaudeMessage } = require('./lib/transcript');
+const { hasChanges, createCheckpoint } = require('./lib/checkpoint');
 const debug = require('./lib/debug');
 
 const PHASE_LABELS = {
@@ -93,6 +94,14 @@ async function main() {
       last_response: lastMessage,
       started_at: startedAt
     }, cddRoot);
+
+    // Auto-checkpoint: save any uncommitted work before session ends
+    if (hasChanges(cwd)) {
+      const cp = createCheckpoint('session-stop', sessionId || 'unknown', cwd);
+      if (cp.created) {
+        debug.log(cddRoot, 'on-stop', 'Auto-checkpoint created', { hash: cp.hash });
+      }
+    }
 
   } catch (err) {
     debug.log(findCddRoot(process.cwd()), 'on-stop', 'Hook error', err);
