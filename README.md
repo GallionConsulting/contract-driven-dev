@@ -140,7 +140,7 @@ After installation, the following is added to your Claude Code config directory:
 
 ```
 ~/.claude/
-  commands/cdd/       # 20 slash command files
+  commands/cdd/       # 22 slash command files
   cdd/
     templates/        # YAML/Markdown project templates
     workflows/        # Step-by-step procedure documents
@@ -280,18 +280,37 @@ At session end, creates a handoff file in `.cdd/sessions/` so the next session c
 
 **What gets loaded:** The build command loads only what's needed — the module contract, data contracts for tables this module owns or reads, dependency `provides` sections, and system-wide rules (including design guidelines) — staying within the 40% context budget.
 
+**Rebuild recommendations:** If a previous verify cycle produced a rebuild recommendation (via `/cdd:verify-fix`), the build command automatically picks it up and uses it as guidance — giving the build session "what went wrong last time" context without contamination from the old code.
+
 #### `/cdd:verify [module]` — Check contract compliance
 
-Runs a 5-point check against the module's contract:
+Runs a 6-dimension check against the module's contract:
 
 1. **Inputs** — Does it accept everything the contract's `requires` section says it should?
 2. **Outputs** — Does it expose everything listed in `provides.functions`?
 3. **Dependencies** — Does it only import from declared dependencies?
 4. **Events** — Does it only emit and handle its contracted events?
 5. **Data access** — Does it only write to tables it owns? Are all reads declared?
+6. **Coherence** — Is the implementation consistent with system invariants and dependency contracts? (error formats, naming conventions, shared service usage)
+
+Verify is **report-only** — it judges the code but does not fix it. When failures are found, verify persists a structured failure report to `.cdd/verify-failures/` and directs you to run `/cdd:verify-fix` in a fresh session.
 
 ```
 /cdd:verify user-management
+```
+
+#### `/cdd:verify-fix [module]` — Triage and resolve verify failures
+
+Reads the persisted failure report from `/cdd:verify`, deep-dives into the failing code, and makes a triage verdict — one of three resolution paths:
+
+- **FIX** — Failures are isolated code errors; makes targeted fixes and re-verifies
+- **REBUILD** — Failures are systemic (e.g., coherence failures); resets the module and writes a rebuild recommendation for the next `/cdd:build`
+- **CONTRACT CHANGE** — The code matches intent but the contract is wrong; writes a recommendation for `/cdd:contract-change`
+
+This separation keeps the judge (verify) and the surgeon (verify-fix) in different sessions with clean context.
+
+```
+/cdd:verify-fix user-management
 ```
 
 #### `/cdd:test [module]` — Run tests and mark complete
@@ -425,10 +444,18 @@ Contracts lock after `/cdd:contract`. If you need to change one, this command wa
 4. Apply changes with a clear record
 5. Log the change in `CHANGE-LOG.md`
 
-This is meant to be hard — changing a contract means something was missed in planning, and it can cause extra work across other modules.
+This is meant to be hard — changing a contract means something was missed in planning, and it can cause extra work across other modules. If `/cdd:verify-fix` wrote a contract-change recommendation, this command picks it up automatically as pre-work.
 
 ```
 /cdd:contract-change
+```
+
+#### `/cdd:explore [topic]` — Zero-commitment investigation
+
+Investigate feasibility, brainstorm approaches, or research a problem space without creating any artifacts or changing CDD state. Works at any phase — even before `/cdd:init`. Useful for pre-brief brainstorming, module scoping questions, approach comparisons, or technical feasibility checks.
+
+```
+/cdd:explore "should I use WebSockets or SSE for real-time updates?"
 ```
 
 #### `/cdd:help` — Command reference
@@ -468,6 +495,12 @@ your-project/
         [module]-CHG-[timestamp].yaml
       completed/               # Processed change results with verdicts
         [module]-CHG-[timestamp].yaml
+    verify-failures/             # Persisted verify failure reports (from /cdd:verify)
+      [module]-[timestamp].yaml  # Structured failure report per dimension
+    rebuild-recommendations/     # Rebuild guidance (from /cdd:verify-fix)
+      [module]-[timestamp].md    # What went wrong, guidance for next build
+    contract-change-recommendations/  # Contract change analysis (from /cdd:verify-fix)
+      [module]-[timestamp].md    # Why the contract needs changing, options
     additions/                   # Post-build module additions (from /cdd:add-module)
       [slug].md                  # Addition scoping file
 ```
@@ -482,10 +515,12 @@ your-project/
 PLAN                        init → brief → plan → modularize → contract
 FOUNDATION                  foundation db → auth → middleware → shared → verify
 BUILD CYCLE (per module)    build → verify → test
+                            (if verify fails: verify-fix → fix | rebuild | contract-change)
 WRAP-UP                     audit
 
 CHANGE (if changes needed)  change-request → change → verify → test   (per module)
 ADD (post-build)            add-module → add-contract → build → verify → test   (per module)
+EXPLORE (anytime)           explore [topic]
 ```
 
 ### Command Quick Reference
@@ -498,8 +533,9 @@ ADD (post-build)            add-module → add-contract → build → verify →
 | `/cdd:modularize`            | Planning   | Requirements → modules with dependencies (`MODULES.md`)                    |
 | `/cdd:contract`              | Planning   | Generate and lock all interface contracts                                  |
 | `/cdd:foundation [type]`     | Foundation | Build infrastructure: `db`, `auth`, `tenant`, `middleware`, `shared`, `verify` |
-| `/cdd:build [module]`        | Building   | Build a module from its contract                                           |
-| `/cdd:verify [module]`       | Building   | Check code against contract (5 points)                                     |
+| `/cdd:build [module]`        | Building   | Build a module from its contract (picks up rebuild recommendations)        |
+| `/cdd:verify [module]`       | Building   | Check code against contract (6 dimensions, report-only)                    |
+| `/cdd:verify-fix [module]`   | Building   | Triage verify failures → fix, rebuild, or contract change                  |
 | `/cdd:test [module]`         | Building   | Run tests, mark complete, show what's unblocked                            |
 | `/cdd:audit`                 | Wrap-Up    | Full system check (4 areas)                                                |
 | `/cdd:change-request [changes]` | Changes | Sort changes into per-module change files                                |
@@ -510,7 +546,8 @@ ADD (post-build)            add-module → add-contract → build → verify →
 | `/cdd:resume`                | Any        | Pick up from session handoff file                                          |
 | `/cdd:context [module]`      | Any        | Preview module contract without building                                   |
 | `/cdd:reset [module]`        | Any        | Abandon partial build, return to pending                                   |
-| `/cdd:contract-change`       | Any        | Modify a locked contract (strict process)                                  |
+| `/cdd:contract-change`       | Any        | Modify a locked contract (picks up verify-fix recommendations)             |
+| `/cdd:explore [topic]`       | Any        | Zero-commitment investigation and brainstorming                            |
 | `/cdd:help`                  | Any        | Show command reference                                                     |
 
 ### Typical Session Flow
@@ -528,6 +565,9 @@ Session 9:  /cdd:foundation shared     → build shared       → /clear
 Session 10: /cdd:foundation verify     → confirm it works   → /clear
 Session 11: /cdd:build users      → build module            → /clear
 Session 12: /cdd:verify users     → check contract          → /clear
+            ... if verify fails ...
+            /cdd:verify-fix users → triage failures          → /clear
+            /cdd:verify users     → re-verify after fix      → /clear
 Session 13: /cdd:test users       → run tests, mark complete → /clear
             ... repeat build cycle for each module ...
 Final:      /cdd:audit            → full system check               → /clear
@@ -559,7 +599,7 @@ Final:      /cdd:audit            → full system check               → /clear
 
 ### Git Checkpoints (Rollback)
 
-CDD automatically creates a git checkpoint commit before any code-modifying operation (`/cdd:build`, `/cdd:change`, `/cdd:foundation`, `/cdd:contract-change`). If something goes wrong, you can undo everything back to the pre-command state:
+CDD automatically creates a git checkpoint commit before any code-modifying operation (`/cdd:build`, `/cdd:change`, `/cdd:foundation`, `/cdd:contract-change`, `/cdd:verify-fix`). If something goes wrong, you can undo everything back to the pre-command state:
 
 ```bash
 git reset --hard <checkpoint-hash>

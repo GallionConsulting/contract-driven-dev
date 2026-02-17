@@ -37,9 +37,10 @@ FOUNDATION (sequential)
   /cdd:foundation       Build infrastructure (db, auth, tenant, middleware, shared)
 
 BUILD CYCLE (repeating per module)
-  /cdd:build [module]   Implement a module from its contract
-  /cdd:verify [module]  Verify implementation matches contract
-  /cdd:test [module]    Run tests, then mark module complete
+  /cdd:build [module]       Implement a module from its contract
+  /cdd:verify [module]      Verify implementation matches contract (6 dimensions, report-only)
+  /cdd:verify-fix [module]  Triage verify failures → fix, rebuild, or contract change
+  /cdd:test [module]        Run tests, then mark module complete
 
 SESSION MANAGEMENT
   /cdd:status           Show full project status
@@ -60,6 +61,7 @@ RECOVERY & CHANGES
 ───────────────────────────────────────────────────────────────
 WORKFLOW: init → brief → plan → modularize → contract
          → foundation → [build → verify → test]*
+         (if verify fails: verify-fix → fix | rebuild | contract-change)
          → audit → [change-request → change → verify → test]*
          → [add-module → add-contract → build → verify → test]*
 ───────────────────────────────────────────────────────────────
