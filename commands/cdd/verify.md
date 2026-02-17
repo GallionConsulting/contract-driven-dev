@@ -10,7 +10,7 @@ allowed-tools:
 ---
 
 <objective>
-Perform an AI-assisted contract verification of a module's implementation. This is NOT automated type checking — it is a thorough review comparing the actual code against the locked contract across five dimensions: inputs, outputs, dependency calls, events, and data access. Any violation is flagged with specific file references.
+Perform an AI-assisted contract verification of a module's implementation. This is NOT automated type checking — it is a thorough review comparing the actual code against the locked contract across six dimensions: inputs, outputs, dependency calls, events, data access, and coherence. Any violation is flagged with specific file references.
 </objective>
 
 <execution_context>
@@ -173,6 +173,43 @@ Check the module's data access against the `data_ownership` section of the contr
 
 Record each check as PASS or FAIL with file:line reference.
 
+## Step 7.5: Verification — Coherence
+
+Check that the implementation is consistent with the broader system, not just its own contract.
+This is a PASS/FAIL dimension — no warnings. Either it coheres or it doesn't.
+
+**Check against system invariants:**
+- Error response format matches the `response_format.error.structure` in system-invariants.yaml
+- Success response format matches `response_format.success.structure`
+- HTTP status codes follow the conventions in system-invariants
+- Authentication/authorization patterns match invariant requirements
+- Naming conventions (route paths, function names, database columns) follow
+  `identity.naming_convention` from system-invariants
+- Pagination follows `response_format.pagination` if applicable
+- Validation follows `validation.strategy` from system-invariants
+- Design guidelines (DG- rules) from `design_guidelines` section are followed
+
+**Check against dependency contracts (cross-reference):**
+- When calling a dependency's function, verify the call matches that dependency's
+  `provides.functions` signature — not just this module's `requires` declaration.
+  The `requires` side is what this module THINKS the dependency looks like.
+  The `provides` side is what the dependency ACTUALLY exposes. They must match.
+- Event names emitted match what the events-registry says consumers expect
+
+**Check internal consistency:**
+- Error handling is consistent: the module uses ONE pattern for the same type of
+  failure (not throwing in some places and returning null in others)
+- The module does not re-implement something that system invariants or shared
+  services already provide (e.g., hand-rolling auth checks when middleware handles it)
+
+**Record each check as PASS or FAIL with file:line reference.**
+- FAIL: Direct contradiction with system invariants or dependency contract mismatch
+- PASS: Consistent with system conventions
+
+No WARN level. If naming is mixed or patterns are inconsistent, that is a FAIL —
+the module was built wrong and should be fixed before it becomes a dependency
+for other modules.
+
 ## Step 8: Generate Verification Report
 
 Compile all results into a structured report:
@@ -189,6 +226,7 @@ CONTRACT VERIFICATION — [module-name]
 | Dependency Calls |   [n]  | [n]  | [n]  | ✅/❌  |
 | Events           |   [n]  | [n]  | [n]  | ✅/❌  |
 | Data Access      |   [n]  | [n]  | [n]  | ✅/❌  |
+| Coherence        |   [n]  | [n]  | [n]  | ✅/❌  |
 |------------------|--------|------|------|--------|
 | TOTAL            |   [n]  | [n]  | [n]  | ✅/❌  |
 
@@ -224,7 +262,7 @@ Display footer:
 ═══════════════════════════════════════════════════════════════
 ✅ CDD:VERIFY COMPLETE — [module-name] PASSED
 
-   All [N] checks passed across 5 verification dimensions.
+   All [N] checks passed across 6 verification dimensions.
    Module is verified and ready for testing.
 
 ───────────────────────────────────────────────────────────────
@@ -240,7 +278,46 @@ Display footer:
 
 **If ANY FAIL:**
 
-Do NOT update `verified` to true. Display:
+Do NOT update `verified` to true.
+
+**Persist failure report to disk.** Write a YAML file to `.cdd/verify-failures/[module]-[ISO-timestamp].yaml` containing:
+
+```yaml
+module: [module-name]
+timestamp: [ISO 8601 timestamp]
+contract_hash: [first 7 chars of sha256 of the module contract file contents]
+checkpoint_hash: [current git HEAD short hash, or "none" if not a git repo]
+
+dimensions:
+  inputs:
+    status: PASS|FAIL
+    checks: [n]
+    failures: [n]
+    details: # only if failures > 0
+      - check: "[description of what was checked]"
+        file: "[file path]"
+        line: [line number]
+        expected: "[what the contract specifies]"
+        actual: "[what the code does]"
+  outputs:
+    # same structure
+  dependency_calls:
+    # same structure
+  events:
+    # same structure
+  data_access:
+    # same structure
+  coherence:
+    # same structure
+
+summary:
+  total_checks: [n]
+  total_failures: [n]
+  failed_dimensions: [list of dimension names that failed]
+  coherence_failed: true|false
+```
+
+Display:
 ```
 ═══════════════════════════════════════════════════════════════
 ❌ CDD:VERIFY — [module-name] FAILED
@@ -249,22 +326,23 @@ Do NOT update `verified` to true. Display:
 
    Violations listed above with file:line references.
 
+   Failure report saved to:
+   .cdd/verify-failures/[module]-[timestamp].yaml
+
 ───────────────────────────────────────────────────────────────
-👉 Options:
-   • Fix the implementation to match the contract
-     (if the code is wrong)
-   • Run /cdd:contract-change to update the contract
-     (if the contract is wrong)
+👉 Next step:
+   1. Run /clear to reset your context window
+   2. Run /cdd:verify-fix [module-name] to triage and resolve
 
-   After fixing, run /cdd:verify [module-name] again.
-
-   If context is getting large, run /clear first then
-   /cdd:resume to reload with fresh context.
+   verify-fix will read the failure report and determine the
+   right resolution path (targeted fix, rebuild, or contract
+   change) in a fresh session with clean context.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```
 
-If violations are minor and context budget is under 30% used, offer to fix them now:
-"These violations appear minor and context is still low. Would you like me to fix them now, or would you prefer to /clear and address them in a fresh session?"
+Do NOT offer to fix violations in this session. Verify is report-only.
+Do NOT casually suggest `/cdd:contract-change` — the verify-fix triage
+will determine whether that path is appropriate.
 
 </process>
