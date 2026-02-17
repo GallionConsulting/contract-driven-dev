@@ -103,6 +103,8 @@ CHECKPOINT: [hash]
 ───────────────────────────────────────────────────────────────
 ```
 
+**Retain the checkpoint hash** — you will write it into the completed change file in Step 5.
+
 ## Step 2: Display Change Plan
 
 Show the issues from the change file in a table. Proceed without waiting (this is not interactive).
@@ -319,6 +321,10 @@ module: task-management
 generated_at: "2026-02-15T10:30:00Z"
 completed_at: "2026-02-15T11:15:00Z"
 status: complete
+
+checkpoint:
+  hash: "a7f17ad"                          # from Step 1.5 (null if no checkpoint)
+  rollback_cmd: "git reset --hard a7f17ad" # omit if no checkpoint
 
 summary:
   actionable: 3

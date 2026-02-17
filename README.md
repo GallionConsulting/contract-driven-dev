@@ -565,7 +565,7 @@ CDD automatically creates a git checkpoint commit before any code-modifying oper
 git reset --hard <checkpoint-hash>
 ```
 
-Checkpoint commits use structured messages (`cdd(checkpoint): before build auth`) so they're easy to find in `git log`. If your project isn't a git repo, CDD warns you and continues — checkpoints are automatic when git is available, silent when it isn't.
+Checkpoint commits use structured messages (`cdd(checkpoint): before build auth`) so they're easy to find in `git log`. For changes specifically, the checkpoint hash and rollback command are also saved in the completed change file at `.cdd/changes/completed/[name].yaml` under the `checkpoint` key — so you can always trace a change back to its recovery point without searching git history. If your project isn't a git repo, CDD warns you and asks whether to continue without rollback capability or abort.
 
 ## License
 
