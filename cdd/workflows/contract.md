@@ -437,6 +437,67 @@ For every module's `data_ownership.writes` that lists a non-owned table:
 ### 7g: Report
 Compile a verification report. If there are inconsistencies, fix them before presenting to the user.
 
+## Step 7.5: Contract Quality Lint
+
+Before presenting contracts for approval, verify the contracts themselves are well-written.
+Bad contracts produce bad builds. This is where we catch "garbage in" — before it locks.
+
+**For EACH module contract, check every `provides.functions` entry for:**
+
+1. **Vagueness** — Language that cannot be objectively verified:
+   - "appropriate", "properly", "correctly", "as needed", "relevant"
+   - "handle errors", "validate input" (without specifying WHAT validation)
+   - "etc.", "and so on", "similar"
+   - "should" without specific, measurable criteria
+   - Descriptions that could mean anything: "processes the data", "manages the resource"
+
+2. **Missing error cases** — Every function in `provides.functions` MUST have an `errors` list.
+   A function with no error cases is a function that claims it never fails. Flag it.
+
+3. **Untyped interfaces** — Every input and output MUST have a concrete type.
+   - "object" or "any" is not a type — what fields? What shape?
+   - "string" for an ID — is it uuid, slug, integer-as-string?
+
+4. **Missing endpoint error responses** — Every endpoint in `provides.endpoints` MUST have
+   an `errors` list with at least the obvious cases:
+   - Auth-required endpoints need 401/403
+   - Endpoints referencing a resource by ID need 404
+   - Create/update endpoints need 422 (validation)
+
+5. **Orphaned declarations** — Internal inconsistencies:
+   - A function in `provides` not referenced by any endpoint or event handler
+   - A dependency in `requires.from_modules` not used by any function's described flow
+   - A table in `data_ownership` not accessed by any function
+
+**This is a BLOCKING gate.** If any issues are found, they MUST be fixed before
+presenting to the user for approval. Fix them in the draft — this is pre-lock,
+so editing is free. Do NOT present contracts with known quality issues.
+
+**Output (shown at start of Step 8 before the summary):**
+
+If issues were found and fixed:
+```
+───────────────────────────────────────────────────────────────
+CONTRACT QUALITY LINT — [N] issues found and fixed
+───────────────────────────────────────────────────────────────
+  1. FIXED — [module].provides.functions.createUser: added missing
+     error case for duplicate email (409 Conflict)
+
+  2. FIXED — [module].provides.functions.deleteUser: description
+     said "handles cleanup" — replaced with specific cleanup steps
+
+  3. FIXED — [module].provides.endpoints.POST /api/users: added
+     missing 422 validation error response
+
+All issues resolved. Contracts are clean.
+───────────────────────────────────────────────────────────────
+```
+
+If no issues found:
+```
+Contract quality lint: CLEAN — all [N] module contracts passed.
+```
+
 ## Step 8: Present for Approval
 
 Display a summary to the user:
