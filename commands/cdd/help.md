@@ -25,6 +25,7 @@ CONTRACT-DRIVEN DEVELOPMENT (CDD) — Command Reference
 SETUP
   /cdd:init             Initialize CDD for a new project
   /cdd:help             Show this command reference
+  /cdd:explore [topic]  Zero-commitment investigation & brainstorm
 
 PLANNING (sequential, one-time)
   /cdd:brief            Capture project vision through interactive discussion
