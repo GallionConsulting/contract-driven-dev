@@ -13,6 +13,7 @@ Spend 10 minutes thinking about these before running `/cdd:brief`:
 - [ ] What are you NOT building? (This matters as much as what you are building)
 - [ ] What external services are non-negotiable? (Stripe, SendGrid, S3, etc.)
 - [ ] Any future plans that might affect today's architecture?
+- [ ] What should the UI look like? (Name a library, a reference app, or both — not just "clean and modern")
 
 ---
 
@@ -84,6 +85,36 @@ GOOD: "Resend for transactional email. It's a hard requirement."
 BAD:  "Cloud hosting."
 GOOD: "Railway for hosting, Cloudflare R2 for file storage."
 ```
+
+### DO: Define UI patterns with names, behaviors, and consistency rules
+
+The three things that make UI specs enforceable: **name a library**, **define a behavior**, **demand cross-page consistency**.
+
+```
+BAD:  "I want it to look professional and modern."
+GOOD: "Use Shadcn/ui for components. Use TanStack Table for data grids.
+       Every list view should have click-to-sort columns, a search box
+       above the table, and pagination at 25 rows per page. Same pattern
+       on every list screen."
+```
+
+```
+BAD:  "Nice status indicators."
+GOOD: "Color-coded status badges: gray for draft, blue for sent,
+       green for paid, red for overdue. Same badge component
+       everywhere a status appears — tables, detail pages, dashboard."
+```
+
+```
+BAD:  "Standard layout."
+GOOD: "Fixed header with logo and user menu. Left sidebar with nav links
+       to Dashboard, Invoices, Clients, Settings. Every page uses that
+       same shell — no page defines its own header or nav."
+```
+
+Why: Without concrete UI specs, each module gets built in isolation and ends up with a different visual language. The invoice list uses cards, the client list uses a plain table, and the dashboard uses a third layout. Naming a component library and demanding "same pattern everywhere" prevents this — it becomes a shared component in the contracts.
+
+**Tip:** Naming a reference app ("like Stripe's dashboard") is good *in addition to* specifics, not as a replacement for them. "Like Stripe's dashboard" plus "Shadcn/ui, click-to-sort grids, colored status badges" gives Claude both the vibe and the spec.
 
 ### DO: Give measurable success criteria
 
@@ -182,7 +213,8 @@ These are decisions that are **cheap to make now** and **expensive to change lat
 | Architectural decisions for future-proofing | **Data Model** or **Technical Constraints** |
 | External services needed now | **Integration Points** (mark as "required") |
 | External services needed later | **Out of Scope** + mention in **Integration Points** if it affects architecture |
-| "It should feel like Stripe's dashboard" | **Design & User Experience** |
+| "It should feel like Stripe's dashboard" | **Design & User Experience** (vibe) |
+| Component library, grid behaviors, layout shell, badge specs | **Design & User Experience** (concrete specs) |
 | "It must run on Railway" | **Technical Constraints** |
 | "Admin is just me for now" | **Users** (prevents over-engineering) |
 | Performance targets | **Success Criteria** |
@@ -195,4 +227,5 @@ These are decisions that are **cheap to make now** and **expensive to change lat
 2. **Cut scope hard** — Phase 2 it, don't build it
 3. **Flag landmines** — ask "does ignoring X now hurt us later?"
 4. **Answer flow questions** — triggers, steps, outcomes
-5. **Measure success** — numbers, not feelings
+5. **Spec the UI** — name a library, define behaviors, demand consistency
+6. **Measure success** — numbers, not feelings

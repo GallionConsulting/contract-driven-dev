@@ -157,13 +157,44 @@ For Google Calendar, that would need to know when invoices are created and when 
 
 ### 3h: Design & User Experience
 
-**Claude:** What should the user experience feel like?
+**Claude:** What should the user experience feel like? Are there any UI conventions or visual patterns you want followed?
 
-**User:** Clean and fast. Think "modern SaaS" — not enterprise-y. The target user is a freelancer who isn't very technical. They should never feel confused. Minimal clicks to create and send an invoice. I like how Stripe's own dashboard looks — clean typography, good use of whitespace, clear status badges.
+**User:** Clean and fast. Think "modern SaaS" — not enterprise-y. The target user is a freelancer who isn't very technical. They should never feel confused. I like how Stripe's own dashboard looks — clean typography, good use of whitespace, clear status badges.
 
-For the API (if we build one for the payment page), RESTful, JSON, standard HTTP status codes. Nothing fancy.
+> `[GOOD: Named a reference product (Stripe's dashboard). This gives Claude a searchable visual target and is far more useful than adjectives like "modern" or "clean" on their own.]`
 
-> `[GOOD: Named a reference product (Stripe's dashboard) for visual direction. Identified the target user's technical level. This becomes enforceable design guidelines — e.g., "no technical jargon in UI text."]`
+**Claude:** That helps for the overall feel. Let me ask about some specifics — layout, components, and consistency. Does the app have a standard page layout you want every screen to share?
+
+**User:** Yes. Fixed header across the top with the logo on the left, and the user's name and a logout button on the right. Left sidebar for navigation — links to Dashboard, Invoices, Clients, Settings. The main content area takes up the rest. Every page should use that same shell. I don't want pages that look like they belong to a different app.
+
+> `[GOOD: Described the layout shell concretely — what's in the header, what's in the sidebar, what sections exist. "Every page should use that same shell" is a consistency rule that will become a shared layout module or component.]`
+
+**Claude:** Got it — consistent app shell everywhere. What about lists and tables? You'll have an invoice list, a client list — should those follow a pattern?
+
+**User:** Yeah, I want a standard data grid pattern. Column headers you can click to sort. A search box above the table to filter by typing. Pagination at the bottom — maybe 25 rows per page. I want that to be the same everywhere there's a list. Don't want the invoice list to work one way and the client list to work differently.
+
+> `[EXCELLENT: Defined a reusable data grid pattern with specific behaviors — click-to-sort columns, search/filter bar, pagination with a row count. "The same everywhere" is the key phrase — this tells Claude to build one shared table component rather than ad-hoc tables per page.]`
+
+**Claude:** Makes sense. Any preference on a component library, or should we build from scratch?
+
+**User:** I've heard good things about Shadcn. Use that if it works with React. For the data grid specifically, I want something that handles sorting and filtering out of the box — I don't want us hand-coding table logic. Use TanStack Table or whatever Shadcn recommends.
+
+> `[GOOD: Named a specific component library (Shadcn/ui) and a table library (TanStack Table). Even "or whatever Shadcn recommends" is useful — it tells Claude the user trusts library defaults and doesn't need bespoke solutions. This prevents the build phase from reinventing table sorting.]`
+
+**Claude:** Last question on design — any specific style rules? Colors, spacing, that sort of thing?
+
+**User:** Stick with Shadcn's default theme for now — I don't want to waste time on custom colors. But I do want consistent status badges everywhere. Invoices have statuses like draft, sent, paid, overdue — those should be colored badges. Use gray for draft, blue for sent, green for paid, red/orange for overdue. Same badge style wherever a status appears — in the table, on the detail page, on the dashboard.
+
+For the API on the payment page — RESTful, JSON, standard HTTP status codes. Nothing fancy.
+
+> `[EXCELLENT: The status badge spec is exactly the kind of detail that prevents inconsistency. Without it, the invoice list might show a green dot, the detail page might show bold text, and the dashboard might show an icon — three different visual languages for the same concept. By specifying "same badge style wherever a status appears," the user ensures one shared component with a defined color mapping.]`
+>
+> `[PATTERN: The strongest UI answers in this section share three traits:]`
+> `[1. They name a specific library or reference app (Shadcn, TanStack Table, "like Stripe's dashboard")]`
+> `[2. They define a behavior ("click to sort," "25 rows per page," "same shell everywhere")]`
+> `[3. They demand cross-page consistency ("same everywhere," "same badge style wherever")]`
+>
+> `[Compare this to saying "I want it to look professional." That tells Claude nothing it can enforce. "Shadcn defaults, click-to-sort grids with 25 rows, colored status badges per this mapping" is a concrete spec that flows into contracts and becomes verifiable during the build.]`
 
 ---
 
@@ -197,6 +228,8 @@ For the API (if we build one for the payment page), RESTful, JSON, standard HTTP
 | Gave measurable success criteria | "Under 60 seconds", "without creating an account" |
 | Was honest about minimal needs | "Admin is just me poking at the database" |
 | Answered flow questions with specifics | "3 days, 7 days, 14 days" for reminders |
+| Defined UI patterns with library names and behaviors | "Shadcn, TanStack Table, click-to-sort, 25 rows, same badge style everywhere" |
+| Described a shared layout shell | "Fixed header, left sidebar, every page uses that same shell" |
 
 ### What would have gone wrong without these:
 
@@ -208,3 +241,5 @@ For the API (if we build one for the payment page), RESTful, JSON, standard HTTP
 | "Admin manages everything" | Created a full admin module with role management, user CRUD, etc. |
 | "Some kind of notification system" | Not known whether to build email, SMS, push, in-app, or all four |
 | Nothing about events | Built tightly-coupled reminder logic, no hook points for Phase 2 integrations |
+| "I want it to look professional" | Each page gets ad-hoc styling — invoice list uses cards, client list uses a table, dashboard uses a third layout. No shared components. |
+| Nothing about data grids | Built a simple `<table>` for invoices, no sorting/filtering — then needed a full rewrite when the client list needed the same features |
