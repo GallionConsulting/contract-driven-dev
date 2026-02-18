@@ -299,9 +299,7 @@ Verify is **report-only** — it judges the code but does not fix it. When failu
 /cdd:verify user-management
 ```
 
-#### `/cdd:verify-fix [module]` — Triage and resolve verify failures *(on-demand)*
-
-> **Don't run this directly.** This command is invoked only when `/cdd:verify` detects failures and tells you to run it.
+#### `/cdd:verify-fix [module]` — Triage and resolve verify failures 
 
 Reads the persisted failure report from `/cdd:verify`, deep-dives into the failing code, and makes a triage verdict — one of three resolution paths:
 
@@ -537,7 +535,7 @@ EXPLORE (anytime)           explore [topic]
 | `/cdd:foundation [type]`     | Foundation | Build infrastructure: `db`, `auth`, `tenant`, `middleware`, `shared`, `verify` |
 | `/cdd:build [module]`        | Building   | Build a module from its contract (picks up rebuild recommendations)        |
 | `/cdd:verify [module]`       | Building   | Check code against contract (6 dimensions, report-only)                    |
-| `/cdd:verify-fix [module]`   | Building   | *(on-demand)* Triage verify failures → fix, rebuild, or contract change    |
+| `/cdd:verify-fix [module]`   | Building   | Triage verify failures → fix, rebuild, or contract change                  |
 | `/cdd:test [module]`         | Building   | Run tests, mark complete, show what's unblocked                            |
 | `/cdd:audit`                 | Wrap-Up    | Full system check (4 areas)                                                |
 | `/cdd:change-request [changes]` | Changes | Sort changes into per-module change files                                |
@@ -598,6 +596,10 @@ Final:      /cdd:audit            → full system check               → /clear
 - **Build order follows dependencies** — `/cdd:test` tells you what's unblocked when tests pass
 - **Load interfaces, not code** — when module B depends on A, only A's `provides` section is loaded
 - **Every table has one owner (or is public)** — writes are strictly enforced through ownership; reads are contracted to public columns and use framework-native patterns
+
+### Adapting Coding Standards for CDD
+
+If your project has existing coding standards (linting rules, framework conventions, style guides), some may need adjusting to work with CDD's contract enforcement. The [CDD Code Requirements](docs/cdd-code-requirements.md) document spells out exactly what CDD requires from generated code — module boundaries, data ownership rules, interface contracts, testing expectations — and what it leaves entirely up to you (design patterns, dependency injection, framework conventions, type strictness, etc.). Point your AI or reviewer at that document alongside your standards and ask whether they're compatible.
 
 ### Git Checkpoints (Rollback)
 
