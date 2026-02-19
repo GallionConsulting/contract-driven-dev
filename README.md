@@ -1,6 +1,6 @@
 # Contract-Driven Development (CDD)
 
-![Version](https://img.shields.io/badge/version-3.0.0-blue)
+![Version](https://img.shields.io/badge/version-3.1.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 A slash-command toolkit for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that lets you build real, multi-module projects — the kind that are too big for a single conversation. You describe what you want, CDD breaks it into pieces with clear contracts between them, and then you build each piece in a focused session. Nothing gets lost between sessions because everything important lives in files, not chat history.
@@ -192,7 +192,7 @@ Bootstraps CDD for your project. Creates the `.cdd/` directory with configuratio
 /cdd:init
 ```
 
-Claude will ask about your tech stack (language, framework, database), project paths, and which foundation layers you need. The result is:
+Claude will ask about your tech stack (language, framework, database) and project paths. The result is:
 
 - `.cdd/config.yaml` — project configuration
 - `.cdd/state.yaml` — phase and progress tracking
@@ -221,7 +221,7 @@ Reads your brief and generates clear, numbered requirements grouped by area. Eac
 
 #### `/cdd:modularize` — Break the system into modules
 
-Looks at the requirements and identifies separate modules with their dependencies, context budgets, and build order. Makes sure no modules depend on each other in circles.
+Looks at the requirements and identifies separate modules with their dependencies, context budgets, and build order. Also determines which foundation layers your project needs based on the requirements. Makes sure no modules depend on each other in circles.
 
 ```
 /cdd:modularize
@@ -251,7 +251,7 @@ Foundation commands build shared infrastructure that modules depend on. Run thes
 
 #### `/cdd:foundation [type]` — Build an infrastructure layer
 
-Builds one foundation layer at a time. Available types depend on what you configured during `/cdd:init`:
+Builds one foundation layer at a time. Available types depend on what was determined during `/cdd:modularize`:
 
 ```
 /cdd:foundation db          # Database migrations, connection pooling, query helpers
