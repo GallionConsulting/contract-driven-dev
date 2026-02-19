@@ -580,6 +580,7 @@ async function install(targetDir, skipPrompt) {
   /cdd:help             Show all CDD commands
   /cdd:brief            Capture project brief
   /cdd:plan             Transform brief into requirements
+  /cdd:plan-review      Validate requirements completeness
   /cdd:modularize       Break system into modules
   /cdd:contract         Define interface contracts
   /cdd:foundation       Build infrastructure foundations
