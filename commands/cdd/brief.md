@@ -46,11 +46,12 @@ Check if `.cdd/contracts/BRIEF.md` already exists.
 
 **If it exists:**
 - Read it and display a summary
-- Tell the user: "I found an existing BRIEF.md. Let me review it for completeness."
+- If it starts with `<!-- CDD:INCOMPLETE`, tell the user: "I found a partial brief from a previous session. I'll pick up where we left off." Remove the incomplete marker, use the existing content as context for already-covered topics, and resume the interview from the first missing section. Set `source: interactive` when updating state.
+- Otherwise, tell the user: "I found an existing BRIEF.md. Let me review it for completeness."
 - Check if it covers all required sections (Problem, Vision, Users, Core Features, Out of Scope, Data Model, Technical Constraints, Integration Points, Design & User Experience Guidelines, Success Criteria)
 - If any sections are missing or thin, point them out and ask if the user wants to fill them in
 - If it looks complete, ask for approval and skip to Step 5
-- Set `source: provided` when updating state
+- Set `source: provided` when updating state (unless resuming from incomplete, which uses `interactive`)
 
 **If it does not exist:** Proceed to Step 3. Set `source: interactive` when updating state.
 
@@ -86,6 +87,35 @@ Run a structured interview. Do NOT ask all questions at once — have a natural 
 - Reference the stack from config.yaml (language, framework, database)
 - "Are there any technical constraints I should know about? Hosting requirements, performance targets, compliance needs, existing systems to integrate with?"
 - Ask about authentication requirements specifically
+
+### 3f-check: Config Sanity Check
+
+After discussing technical constraints, silently cross-reference what the user has described so far against the stack in `config.yaml`:
+
+- Does the described architecture match the framework? (e.g., user describes MVC patterns but config says a non-MVC framework)
+- Do the database requirements match the selected database? (e.g., row-level security needs PostgreSQL but config says MySQL; JSON columns described but config says a DB without native JSON support)
+- Does the language match the ecosystem the user is describing? (e.g., user talks about Laravel conventions but config says Python)
+
+**If a conflict is detected:**
+
+1. Save all interview progress so far to `.cdd/contracts/BRIEF.md` as a partial document. At the very top of the file, add this marker line before the title:
+   ```
+   <!-- CDD:INCOMPLETE — config conflict detected, interview paused -->
+   ```
+2. Tell the user what the conflict is and bail:
+   ```
+   I noticed a conflict between your config and what you're describing:
+
+     Config says: [field]: [value]
+     You described: [what they said that contradicts it]
+
+   Please run /clear and then /cdd:init to correct your stack settings.
+   Your brief progress has been saved — when you re-run /cdd:brief,
+   I'll pick up where we left off.
+   ```
+3. Do NOT attempt to modify config.yaml — that is init's job. Stop here.
+
+**If no conflict:** Continue the interview normally.
 
 ### 3g: Integration Points
 - "Does this system need to talk to any external services? APIs, payment processors, email services, file storage?"

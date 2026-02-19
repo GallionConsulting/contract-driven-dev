@@ -6,6 +6,7 @@ allowed-tools:
   - Write
   - Edit
   - Glob
+  - AskUserQuestion
 ---
 
 <objective>
@@ -49,7 +50,7 @@ Check if `.cdd/contracts/MODULES.md` already exists.
 - Tell the user: "I found an existing MODULES.md. Let me review it for completeness."
 - Check if it covers all required sections (Module Summary, Dependency Graph, Build Order, Parallel Groups, Module Details, Data Ownership Matrix, Shared Services)
 - If any sections are missing or thin, point them out and ask if the user wants to fill them in
-- If it looks complete, ask for approval and skip to Step 10
+- If it looks complete, ask for approval and skip to Step 11
 - This path supports re-running after a `/clear` during revision
 
 **If it does not exist:** Proceed to Step 3.
@@ -64,7 +65,26 @@ Extract the `context.window_size` and `context.max_usage_percent` from config.ya
 
 Default: 200k window * 40% = 80k session budget, 40% of 80k = 32k module ceiling.
 
-## Step 4: Identify Modules
+## Step 4: Determine Foundation Layers
+
+Based on the requirements, determine which foundation layers the project needs:
+
+| Foundation | Trigger signals in requirements |
+|------------|-------------------------------|
+| db | Any data entities or persistence requirements (almost always yes) |
+| auth | Any user types, login, permissions, or access control FRs |
+| tenant | Multiple organizations/accounts sharing the system, data isolation FRs |
+| middleware | Request pipeline needs (rate limiting, logging, CORS, etc.) |
+| shared | Cross-cutting services needed by 3+ modules (events, file storage, etc.) |
+
+Present the recommendation to the user for confirmation. For each recommended foundation, show the requirement signals that triggered it.
+
+When the user approves, write the approved foundations to `.cdd/config.yaml`. For each foundation, set:
+- `required: true` for db, auth, middleware (if selected)
+- `required: false` for tenant, shared (if selected)
+- `allow_stub: true` for auth (always)
+
+## Step 5: Identify Modules
 
 Apply goal-backward planning — for each functional area in the requirements, ask:
 - "What must be true for this to be independently buildable?"
@@ -98,7 +118,7 @@ For each module, estimate token counts for:
 - Estimates should be conservative — overestimate rather than underestimate
 - Rough guide: 1 token ≈ 4 characters. A typical 100-line code file ≈ 2-3k tokens.
 
-## Step 5: Validate Dependency Graph
+## Step 6: Validate Dependency Graph
 
 The module dependency graph MUST be a Directed Acyclic Graph (DAG). Verify:
 
@@ -111,11 +131,11 @@ The module dependency graph MUST be a Directed Acyclic Graph (DAG). Verify:
 
 3. **Topological sort:** Compute a valid build order where every module is built only after all its dependencies are built
 
-## Step 6: Identify Parallel Groups
+## Step 7: Identify Parallel Groups
 
 Group modules that have NO mutual dependencies (direct or transitive) into parallel groups. Modules in the same parallel group can theoretically be built in any order or simultaneously.
 
-## Step 7: Create Data Ownership Matrix
+## Step 8: Create Data Ownership Matrix
 
 Build a matrix mapping every data entity from the requirements to exactly one owning module:
 
@@ -129,18 +149,13 @@ Build a matrix mapping every data entity from the requirements to exactly one ow
 - Other modules may read directly using framework-native patterns (ORM, query builder, etc.) — reads are declared for dependency tracking, not to restrict access patterns
 - If two modules need to write to the same entity, restructure the ownership
 
-## Step 8: Identify Shared Services
+## Step 9: Validate Shared Services
 
-List any cross-cutting concerns that multiple modules need:
-- Logging/audit trail
-- Event bus/dispatch
-- File storage
-- Email/notification dispatch
-- Caching layer
+Verify that cross-cutting concerns identified during module decomposition (logging, event bus, file storage, email dispatch, caching, etc.) are covered by the foundation selections from Step 4. If any shared service is referenced by 3+ modules but the `shared` foundation was not enabled, flag it and ask the user whether to add it.
 
-These become part of the `foundations` phase, not module contracts.
+List the specific shared services for the MODULES.md Shared Services section.
 
-## Step 9: Generate MODULES.md
+## Step 10: Generate MODULES.md
 
 Write `.cdd/contracts/MODULES.md` with this structure:
 
@@ -204,7 +219,7 @@ Write `.cdd/contracts/MODULES.md` with this structure:
 | [name] | [what it does] | [modules] |
 ```
 
-## Step 10: Present Summary for Approval
+## Step 11: Present Summary for Approval
 
 **Do NOT display the full MODULES.md in your response.** The document is already written to disk and the user can read it there. Displaying it would duplicate the content in the context window.
 
@@ -217,6 +232,7 @@ MODULE ARCHITECTURE SUMMARY
 
 Modules: [count]
 Estimated total sessions: [count]
+Foundations: [list of enabled foundations]
 
 MODULE SUMMARY
   [module-name] ........... [one-line responsibility] ([Nk tokens])
@@ -262,7 +278,7 @@ Allow the user to request modifications. Edit the file as needed.
 **After 2 rounds of revisions**, suggest:
 > "We've done a couple of revision rounds. If you need more significant changes, I recommend running `/clear` and then `/cdd:modularize` again — I'll pick up the existing MODULES.md and refine it from there, with a fresh context window."
 
-## Step 11: State Update
+## Step 12: State Update
 
 When the user approves:
 
@@ -283,7 +299,7 @@ When the user approves:
    - Populate `parallel_groups` with arrays of module names
 3. Write the updated state.yaml back
 
-## Step 12: Session Footer
+## Step 13: Session Footer
 
 Display:
 

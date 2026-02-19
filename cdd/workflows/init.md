@@ -28,18 +28,6 @@ Use `AskUserQuestion` to collect the following information. Ask all questions in
 - **Tests path** — Where do tests live? (default: `tests/`)
 - **Migrations path** — Where do migrations live? (default: `migrations/`)
 
-**Foundations to enable:**
-
-Ask the user which foundation layers apply to their project. Present these options with multi-select:
-
-| Foundation | Description | Default |
-|-----------|-------------|---------|
-| db | Database schema, migrations, and base model/entity classes | Required |
-| auth | Authentication middleware | Required (can be stubbed) |
-| tenant | Multi-tenancy support | Optional |
-| middleware | Request middleware stack | Required |
-| shared | Shared utility services (logging, events, file storage, etc.) | Optional |
-
 ## Step 3: Create Directory Structure
 
 Create the following directory tree in the project root:
@@ -70,11 +58,7 @@ Replace all placeholder values with the user's answers from Step 2:
 - `{{TESTS_PATH}}` → user's tests path (or default)
 - `{{MIGRATIONS_PATH}}` → user's migrations path (or default)
 
-For the `foundations` section, include only the foundations the user selected in Step 2. For each foundation, set:
-- `required: true` for db, auth, middleware (if selected)
-- `required: false` for tenant, shared (if selected)
-- Note: The `shared` foundation is stored as `shared_services` in state.yaml (the command argument is `shared` but the state field is `shared_services`)
-- `allow_stub: true` for auth (always)
+The `foundations` section stays as an empty array `[]` — foundations are determined during `cdd:modularize` based on requirements analysis.
 
 Write the completed config.yaml to `.cdd/config.yaml`.
 
@@ -102,9 +86,6 @@ CDD INITIALIZED
 Project: [project name]
 Stack: [language] / [framework] / [database]
 Context Window: 200k tokens (40% max usage = 80k per session)
-
-Foundations configured:
-  • [for each enabled foundation: name (required|optional, note if stub allowed)]
 
 Directory created: .cdd/
   config.yaml ......... project configuration

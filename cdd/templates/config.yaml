@@ -24,7 +24,7 @@ context:
   max_usage_percent: 40
   budget_warning_percent: 30
 
-# Foundations (configured during cdd:init)
+# Foundations (populated during cdd:modularize based on requirements analysis)
 foundations: []
 # Each entry has: name, required, allow_stub (optional)
 # Example:

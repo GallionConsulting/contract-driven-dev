@@ -557,6 +557,16 @@ After approval:
    - Set `planning.contract.locked: true`
    - Add `planning.contract.completed_at: [ISO 8601 timestamp]`
    - Add `planning.contract.file_count:` with counts of each file type
+   - For each module in the `modules` section, add its `blocked_by` list (copied from the module's contract YAML). This enables the status command to determine blocked vs ready without loading contract files. Example:
+     ```yaml
+     modules:
+       user-management:
+         status: pending
+         blocked_by: []
+       billing:
+         status: pending
+         blocked_by: [user-management]
+     ```
 4. Write the updated state.yaml back
 
 ## Step 10: Session Footer
