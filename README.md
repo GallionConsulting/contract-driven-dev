@@ -1,6 +1,6 @@
 # Contract-Driven Development (CDD)
 
-![Version](https://img.shields.io/badge/version-3.1.0-blue)
+![Version](https://img.shields.io/badge/version-3.2.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 A slash-command toolkit for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that lets you build real, multi-module projects — the kind that are too big for a single conversation. You describe what you want, CDD breaks it into pieces with clear contracts between them, and then you build each piece in a focused session. Nothing gets lost between sessions because everything important lives in files, not chat history.
