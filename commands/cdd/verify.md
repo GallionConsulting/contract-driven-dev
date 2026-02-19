@@ -270,6 +270,9 @@ Display footer:
    1. Run /clear to reset your context window
    2. Then run /cdd:test [module-name] to run tests
 
+   💰 /cdd:test works well on Sonnet — stay on Sonnet
+      or switch with /model to save costs (optional).
+
    /clear resets your context window to zero. The .cdd/ state
    files carry everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
@@ -340,6 +343,9 @@ Display:
 👉 Next step:
    1. Run /clear to reset your context window
    2. Run /cdd:verify-fix [module-name] to triage and resolve
+
+   ⚠️ /cdd:verify-fix needs Opus — switch with /model
+      if you're on Sonnet.
 
    verify-fix will read the failure report and determine the
    right resolution path (targeted fix, rebuild, or contract

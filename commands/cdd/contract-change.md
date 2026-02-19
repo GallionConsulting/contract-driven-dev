@@ -17,6 +17,11 @@ Formally modify a locked contract through a 5-step change process: identify the 
 <execution_context>
 You are running the `cdd:contract-change` command. This is a GOVERNANCE command — it controls contract modifications after lock.
 
+**Model check — Opus recommended:**
+Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
+> ⚠️ This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
+Do not continue until the user responds.
+
 **Note:** Users may arrive here via a `CONTRACT_CHANGE_REQUIRED` verdict from `/cdd:change`. If so, check `.cdd/changes/completed/` for prior research context — the change file will contain detailed analysis of which contract clause is affected, why, and suggested changes. Use this context to pre-populate the change request.
 
 **Note:** Users may also arrive here via a `CONTRACT_CHANGE` verdict from `/cdd:verify-fix`. If so, check `.cdd/contract-change-recommendations/` for files matching `[module]-*.md`. If found, read the most recent one — it contains detailed analysis of why the contract needs changing, what should change (with options), and the previous verify failure report reference. Use this to pre-populate the change request in Step 1, reducing the investigation overhead while maintaining the full heavyweight gate.
@@ -287,6 +292,9 @@ modules:
    [If remediation needed:]
    2. Then run /cdd:build [first-remediation-module] to
       start remediation
+
+   ⚠️ /cdd:build needs Opus — ensure you're on Opus
+      before starting remediation.
 
    [If no remediation needed:]
    2. Continue with your current workflow

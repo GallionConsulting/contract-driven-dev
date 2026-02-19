@@ -5,6 +5,7 @@
 
 # Dev artifacts
 ccdsp.bat
+pushtogithub.ps1
 
 # OS files
 Thumbs.db

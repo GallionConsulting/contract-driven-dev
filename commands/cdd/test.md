@@ -324,6 +324,9 @@ Legend: ✅ complete  🔨 in progress  ⏸️ ready  ❌ failed  🔒 blocked
    2. Then run /cdd:build [recommended-module] to build
       the next module
 
+   ⚠️ /cdd:build needs Opus — switch with /model
+      if you're on Sonnet.
+
    [If parallel eligible:]
    Parallel option: [module-a] and [module-b] can be built
    independently. You could build them in separate sessions.
@@ -357,6 +360,9 @@ If ALL modules are complete (from 8d), display instead:
    1. Run /clear to reset your context window
    2. Then run /cdd:audit to perform a final
       cross-module integration audit
+
+   💰 /cdd:audit works well on Sonnet — stay on Sonnet
+      or switch with /model to save costs (optional).
 
    /clear resets your context window to zero. The .cdd/ state
    files carry everything forward — nothing is lost.

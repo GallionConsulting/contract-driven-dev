@@ -194,6 +194,9 @@ RUN SHEET — execute in order, /clear between each command
 
 Total: [M] change sessions + [M] verify sessions + [M] test sessions
 Module order follows build_order from state.yaml.
+
+💰 Model tip: /cdd:change needs Opus; /cdd:verify and /cdd:test
+   work well on Sonnet. Switch with /model between sessions.
 ```
 
 </process>

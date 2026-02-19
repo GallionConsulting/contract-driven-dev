@@ -15,6 +15,11 @@ Read the structured requirements (REQUIREMENTS.md) and decompose the system into
 <execution_context>
 You are running the `cdd:modularize` command. This breaks the system into modules suitable for contract-driven building.
 
+**Model check — Opus recommended:**
+Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
+> ⚠️ This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
+Do not continue until the user responds.
+
 **Pre-conditions — check these FIRST:**
 1. Read `.cdd/state.yaml`
 2. Verify `phase: planning`

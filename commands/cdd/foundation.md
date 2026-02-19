@@ -17,6 +17,11 @@ Build the infrastructure foundation layer that all modules depend on. This comma
 <execution_context>
 You are running the `cdd:foundation` command. This is the first implementation phase — you are writing REAL CODE that forms the project's infrastructure layer.
 
+**Model check — Opus recommended:**
+Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
+> ⚠️ This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
+Do not continue until the user responds.
+
 **Argument:** The user MUST provide a sub-type argument. If no argument is provided, display the available sub-types and their status, then stop.
 
 **Valid sub-types:** `db`, `auth`, `tenant`, `middleware`, `shared`, `verify`

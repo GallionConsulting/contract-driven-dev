@@ -682,6 +682,9 @@ Foundations verified:
    will load only the contracts for the target module —
    your context stays lean and focused.
 
+   After each build, /cdd:verify and /cdd:test work well
+   on Sonnet — switch with /model to save costs.
+
    /clear resets your context window to zero. The .cdd/ state
    files carry everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────

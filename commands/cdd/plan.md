@@ -15,6 +15,11 @@ Read the project brief (BRIEF.md) and transform it into a formal, structured REQ
 <execution_context>
 You are running the `cdd:plan` command. This transforms the conversational brief into structured requirements.
 
+**Model check — Opus recommended:**
+Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
+> ⚠️ This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
+Do not continue until the user responds.
+
 **Pre-conditions — check these FIRST:**
 1. Read `.cdd/state.yaml`
 2. Verify `phase: planning`

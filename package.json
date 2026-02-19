@@ -1,6 +1,6 @@
 {
   "name": "contract-driven-dev",
-  "version": "2.8.0",
+  "version": "3.0.0",
   "description": "Contract-Driven Development (CDD) command system for Claude Code — enforce interface contracts across multi-session builds",
   "bin": {
     "contract-driven-dev": "bin/install.js"
@@ -23,6 +23,9 @@
   ],
   "author": "",
   "license": "MIT",
+  "scripts": {
+    "version": "node -e \"const fs=require('fs');const v=require('./package.json').version;const r=fs.readFileSync('README.md','utf8');fs.writeFileSync('README.md',r.replace(/version-[0-9]+\\\\.[0-9]+\\\\.[0-9]+-blue/,'version-'+v+'-blue'));\" && git add README.md"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/GallionConsulting/contract-driven-dev.git"

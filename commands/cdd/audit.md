@@ -272,6 +272,9 @@ Based on audit findings, generate specific, actionable remediation steps:
    • Continue with /cdd:build [next-module]
    • Re-run /cdd:audit after all modules are complete
 
+   ⚠️ /cdd:build needs Opus — switch with /model
+      if you're on Sonnet.
+
    1. Run /clear to reset your context window (audit loads
       significant context)
 
@@ -306,6 +309,9 @@ For contract issues: use /cdd:contract-change to update the contract.
    2. Run /cdd:change-request with the issues listed above
       to generate per-module change files
    3. Then process each change file with /cdd:change
+
+   💰 /cdd:change-request works well on Sonnet.
+      /cdd:change needs Opus — switch with /model as needed.
 
    /clear is STRONGLY recommended — this audit loaded
    significant context into your session.

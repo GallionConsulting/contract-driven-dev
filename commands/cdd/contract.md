@@ -15,6 +15,11 @@ Generate formal interface contracts for every module, data schema, system invari
 <execution_context>
 You are running the `cdd:contract` command. This produces the binding contracts that govern all implementation.
 
+**Model check — Opus recommended:**
+Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
+> ⚠️ This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
+Do not continue until the user responds.
+
 **Pre-conditions — check these FIRST:**
 1. Read `.cdd/state.yaml`
 2. Verify `phase: planning`

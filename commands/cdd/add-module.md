@@ -17,6 +17,11 @@ Interactive scoping session for adding new modules to a built CDD project. Disco
 <execution_context>
 You are running the `cdd:add-module` command. This is an INTERACTIVE SCOPING command — no contracts are generated, no code is written.
 
+**Model check — Opus recommended:**
+Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
+> ⚠️ This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
+Do not continue until the user responds.
+
 **Pre-conditions — check these FIRST:**
 1. Read `.cdd/state.yaml`
 2. Read `.cdd/config.yaml`

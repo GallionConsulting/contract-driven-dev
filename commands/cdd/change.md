@@ -17,6 +17,11 @@ Process ONE change file for a single module. For each item in the file: research
 <execution_context>
 You are running the `cdd:change` command. This is a PER-MODULE CHANGE PROCESSOR that makes targeted changes while respecting contracts.
 
+**Model check — Opus recommended:**
+Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
+> ⚠️ This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
+Do not continue until the user responds.
+
 **Argument:** The change file name (without path). Resolved to `.cdd/changes/pending/[name].yaml`.
 
 If no argument is provided, list pending change files from `.cdd/changes/pending/` and stop:
@@ -486,6 +491,9 @@ Next steps:
    /cdd:verify [module]
    /clear
    /cdd:test [module]
+
+   💰 /cdd:verify and /cdd:test work well on Sonnet —
+      switch with /model to save costs (optional).
 ```
 
 </process>

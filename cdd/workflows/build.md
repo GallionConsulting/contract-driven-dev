@@ -474,6 +474,9 @@ Display the appropriate footer:
    2. Then run /cdd:verify [module-name] to verify the
       implementation matches the contract
 
+   💰 /cdd:verify works well on Sonnet — switch with /model
+      to save costs (optional).
+
    /clear resets your context window to zero. The session file
    carries everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────

@@ -16,6 +16,11 @@ Capture the user's project vision through an interactive discovery session and p
 <execution_context>
 You are running the `cdd:brief` command. This is the first planning step after `cdd:init`.
 
+**Model check — Opus recommended:**
+Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
+> ⚠️ This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
+Do not continue until the user responds.
+
 **Pre-conditions — check these FIRST:**
 1. Read `.cdd/state.yaml`
 2. Verify `phase: planning` — if not, stop and tell the user which phase they're in
