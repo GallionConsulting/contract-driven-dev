@@ -1,6 +1,6 @@
 # Contract-Driven Development (CDD)
 
-![Version](https://img.shields.io/badge/version-3.2.0-blue)
+![Version](https://img.shields.io/badge/version-3.3.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 A slash-command toolkit for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that lets you build real, multi-module projects — the kind that are too big for a single conversation. You describe what you want, CDD breaks it into pieces with clear contracts between them, and then you build each piece in a focused session. Nothing gets lost between sessions because everything important lives in files, not chat history.
@@ -140,7 +140,7 @@ After installation, the following is added to your Claude Code config directory:
 
 ```
 ~/.claude/
-  commands/cdd/       # 22 slash command files
+  commands/cdd/       # 23 slash command files
   cdd/
     templates/        # YAML/Markdown project templates
     workflows/        # Step-by-step procedure documents
@@ -218,6 +218,18 @@ Reads your brief and generates clear, numbered requirements grouped by area. Eac
 ```
 
 **Reads:** `BRIEF.md` | **Produces:** `.cdd/contracts/REQUIREMENTS.md`
+
+#### `/cdd:plan-review` — Validate requirements completeness
+
+Walks through every success criterion and user journey to verify the requirements describe a complete, usable application — not just a collection of features. Catches "connective tissue" gaps like missing navigation, logout buttons, or screens that have no way in or out.
+
+```
+/cdd:plan-review
+```
+
+**Reads:** `BRIEF.md`, `REQUIREMENTS.md` | **Produces:** Review report with gaps categorized as REQUIRED / SUGGESTED / OPTIONAL
+
+The review flags missing requirements and offers to add them before you proceed to modularize. Required by default but can be skipped for projects where you're confident in your requirements.
 
 #### `/cdd:modularize` — Break the system into modules
 
@@ -512,7 +524,7 @@ your-project/
 ### Workflow at a Glance
 
 ```
-PLAN                        init → brief → plan → modularize → contract
+PLAN                        init → brief → plan → plan-review → modularize → contract
 FOUNDATION                  foundation db → auth → middleware → shared → verify
 BUILD CYCLE (per module)    build → verify → test
                             (if verify fails: verify-fix → fix | rebuild | contract-change)
@@ -530,6 +542,7 @@ EXPLORE (anytime)           explore [topic]
 | `/cdd:init`                  | Planning   | Create `.cdd/` directory and configure project                             |
 | `/cdd:brief`                 | Planning   | Guided conversation, produces `BRIEF.md`                                   |
 | `/cdd:plan`                  | Planning   | Brief → numbered requirements (`REQUIREMENTS.md`)                          |
+| `/cdd:plan-review`           | Planning   | Validate requirements cover all user journeys and UI flows                 |
 | `/cdd:modularize`            | Planning   | Requirements → modules with dependencies (`MODULES.md`)                    |
 | `/cdd:contract`              | Planning   | Generate and lock all interface contracts                                  |
 | `/cdd:foundation [type]`     | Foundation | Build infrastructure: `db`, `auth`, `tenant`, `middleware`, `shared`, `verify` |
@@ -556,19 +569,20 @@ EXPLORE (anytime)           explore [topic]
 Session 1:  /cdd:init        → answer setup questions       → /clear
 Session 2:  /cdd:brief       → describe your project        → /clear
 Session 3:  /cdd:plan        → review requirements          → /clear
-Session 4:  /cdd:modularize  → review module breakdown      → /clear
-Session 5:  /cdd:contract    → review generated contracts    → /clear
-Session 6:  /cdd:foundation db         → build database     → /clear
-Session 7:  /cdd:foundation auth       → build auth         → /clear
-Session 8:  /cdd:foundation middleware → build middleware    → /clear
-Session 9:  /cdd:foundation shared     → build shared       → /clear
-Session 10: /cdd:foundation verify     → confirm it works   → /clear
-Session 11: /cdd:build users      → build module            → /clear
-Session 12: /cdd:verify users     → check contract          → /clear
+Session 4:  /cdd:plan-review → validate user journeys        → /clear
+Session 5:  /cdd:modularize  → review module breakdown      → /clear
+Session 6:  /cdd:contract    → review generated contracts    → /clear
+Session 7:  /cdd:foundation db         → build database     → /clear
+Session 8:  /cdd:foundation auth       → build auth         → /clear
+Session 9:  /cdd:foundation middleware → build middleware    → /clear
+Session 10: /cdd:foundation shared     → build shared       → /clear
+Session 11: /cdd:foundation verify     → confirm it works   → /clear
+Session 12: /cdd:build users      → build module            → /clear
+Session 13: /cdd:verify users     → check contract          → /clear
             ... if verify fails ...
             /cdd:verify-fix users → triage failures          → /clear
             /cdd:verify users     → re-verify after fix      → /clear
-Session 13: /cdd:test users       → run tests, mark complete → /clear
+Session 14: /cdd:test users       → run tests, mark complete → /clear
             ... repeat build cycle for each module ...
 Final:      /cdd:audit            → full system check               → /clear
 

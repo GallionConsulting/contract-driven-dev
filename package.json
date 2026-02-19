@@ -1,6 +1,6 @@
 {
   "name": "contract-driven-dev",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "Contract-Driven Development (CDD) command system for Claude Code — enforce interface contracts across multi-session builds",
   "bin": {
     "contract-driven-dev": "bin/install.js"

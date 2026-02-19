@@ -299,8 +299,13 @@ Estimated document size: ~[N]k tokens
 ───────────────────────────────────────────────────────────────
 👉 Recommended next step:
    1. Run /clear to reset your context window
-   2. Then run /cdd:modularize to break the system into
-      independently-buildable modules
+   2. Then run /cdd:plan-review to validate that your
+      requirements describe a complete, usable application
+
+   Plan-review walks through every success criterion and user
+   journey to catch "connective tissue" gaps — missing navigation,
+   logout buttons, screens with no way in or out — before they
+   become missing contracts.
 
    /clear resets your context window to zero. The .cdd/ state
    files carry everything forward — nothing is lost.

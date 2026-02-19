@@ -8,6 +8,8 @@ planning:
     status: pending
   plan:
     status: pending
+  plan_review:
+    status: pending
   modularize:
     status: pending
   contract:

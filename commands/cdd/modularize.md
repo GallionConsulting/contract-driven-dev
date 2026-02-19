@@ -25,7 +25,10 @@ Do not continue until the user responds.
 1. Read `.cdd/state.yaml`
 2. Verify `phase: planning`
 3. Verify `planning.plan.status: complete` — if not, tell the user to run `cdd:plan` first
-4. Verify `planning.modularize.status: pending` — if `complete`, tell the user modularization is done and suggest `cdd:contract`
+4. Check `planning.plan_review.status` — if `pending`, display this warning and wait for user response:
+   > **Plan review not yet run.** The `/cdd:plan-review` command validates that your requirements describe a complete, usable application — catching missing navigation, inaccessible features, and gaps between modules before they become missing contracts. It's recommended but not required. Type "skip" to proceed without it, or run `/cdd:plan-review` first.
+   If the user says "skip", proceed. Otherwise stop and suggest running plan-review.
+5. Verify `planning.modularize.status: pending` — if `complete`, tell the user modularization is done and suggest `cdd:contract`
 
 **Context budget:** This command loads ONLY `.cdd/contracts/REQUIREMENTS.md` and state/config files. Do NOT read BRIEF.md, source code, or other files.
 </execution_context>
@@ -37,6 +40,7 @@ Do not continue until the user responds.
 Read `.cdd/state.yaml`. Verify:
 - `phase` is `planning`
 - `planning.plan.status` is `complete`
+- `planning.plan_review.status` — if `pending`, warn the user (see pre-conditions above) and wait for response
 - `planning.modularize.status` is `pending`
 
 If pre-conditions fail, explain why and suggest the correct next command. Stop.

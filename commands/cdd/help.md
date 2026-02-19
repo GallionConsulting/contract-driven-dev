@@ -30,6 +30,7 @@ SETUP
 PLANNING (sequential, one-time)
   /cdd:brief            Capture project vision through interactive discussion
   /cdd:plan             Transform brief into structured requirements
+  /cdd:plan-review      Validate requirements cover all user journeys
   /cdd:modularize       Break system into modules with context budgets
   /cdd:contract         Define all interface contracts (critical step)
 
@@ -59,7 +60,7 @@ RECOVERY & CHANGES
   /cdd:change [change-file] Process one module's changes
 
 ───────────────────────────────────────────────────────────────
-WORKFLOW: init → brief → plan → modularize → contract
+WORKFLOW: init → brief → plan → plan-review → modularize → contract
          → foundation → [build → verify → test]*
          (if verify fails: verify-fix → fix | rebuild | contract-change)
          → audit → [change-request → change → verify → test]*
