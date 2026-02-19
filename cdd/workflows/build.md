@@ -234,7 +234,7 @@ explains what went wrong and how to avoid the same mistakes.
 ```
 
 After displaying, confirm understanding:
-"I've reviewed the contract for [module-name]. The module [brief summary of what it does]. I'll implement it in this order: service layer → data access → routes → events. Shall I proceed?"
+"I've reviewed the contract for [module-name]. The module [brief summary of what it does]. I'll implement it in this order: service layer → data access → routes → views → events. Shall I proceed?"
 
 Wait for user confirmation before writing any code.
 
@@ -274,6 +274,7 @@ modules:
       service: pending
       queries: pending
       routes: pending
+      views: pending
       events: pending
 ```
 
@@ -338,6 +339,20 @@ modules:
 
 If the module has no routes, set `routes: skipped`.
 
+## Step 9.5: Implementation — Views/Templates
+
+If the module contract contains ANY endpoints with `view_elements` or `client_behavior`:
+  → Execute the views sub-workflow at `~/.claude/cdd/workflows/build-views.md`
+
+If the module has NO `view_elements` and NO `client_behavior` on any endpoint:
+  → Skip this step entirely. Update state:
+```yaml
+modules:
+  [module]:
+    progress:
+      views: skipped
+```
+
 ## Step 10: Implementation — Event Emissions (if applicable)
 
 Wire up event emissions if the module contract includes `events_emitted`.
@@ -367,6 +382,8 @@ Before finishing, perform a quick self-check against the contract:
 3. Every `events_emitted` event is actually emitted
 4. Writes only touch tables in `data_ownership.writes`; reads only touch tables declared in `data_ownership` and respect column visibility (only declared public columns for non-owned standard tables)
 5. Route paths and methods match the contract
+6. Every `view_elements` entry is present in the corresponding template (skip if no view_elements)
+7. Every `client_behavior` effect has a JavaScript implementation (skip if no client_behavior)
 
 If any discrepancy is found, fix it now. Do not defer.
 
@@ -434,6 +451,7 @@ modules:
       service: complete
       queries: complete
       routes: [complete|skipped]
+      views: [complete|skipped]
       events: [complete|skipped]
     session_file: ".cdd/sessions/[session-id].yaml"
 ```
@@ -448,6 +466,7 @@ modules:
       service: [status]
       queries: [status]
       routes: [status]
+      views: [status]
       events: [status]
     session_file: ".cdd/sessions/[session-id].yaml"
 ```

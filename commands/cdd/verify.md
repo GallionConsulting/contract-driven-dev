@@ -10,7 +10,7 @@ allowed-tools:
 ---
 
 <objective>
-Perform an AI-assisted contract verification of a module's implementation. This is NOT automated type checking — it is a thorough review comparing the actual code against the locked contract across six dimensions: inputs, outputs, dependency calls, events, data access, and coherence. Any violation is flagged with specific file references.
+Perform an AI-assisted contract verification of a module's implementation. This is NOT automated type checking — it is a thorough review comparing the actual code against the locked contract across seven dimensions: inputs, outputs, dependency calls, events, data access, coherence, and view completeness. Any violation is flagged with specific file references. The view completeness dimension is conditionally skipped for modules with no view contracts.
 </objective>
 
 <execution_context>
@@ -210,6 +210,35 @@ No WARN level. If naming is mixed or patterns are inconsistent, that is a FAIL �
 the module was built wrong and should be fixed before it becomes a dependency
 for other modules.
 
+## Step 7.7: Verification — View Completeness
+
+**Pre-check:** If the module contract has NO endpoints with `view_elements` and NO endpoints with `client_behavior`, skip this dimension entirely and record:
+
+```
+| View Completeness  |   0  |   0  |   0  | ⏭️ SKIPPED (no view contracts) |
+```
+
+Proceed to Step 8.
+
+**If the module HAS view contracts, verify:**
+
+**For each endpoint with `view_elements`:**
+1. Read the template/view file that renders this endpoint's response
+2. For each view_element entry:
+   - **Data display:** PASS if the template contains rendering for ALL listed `data` fields. FAIL if any field is missing from the template output.
+   - **Forms:** PASS if a form exists targeting the correct `action` endpoint with ALL listed `fields` as inputs. FAIL if the form is missing, targets the wrong endpoint, or is missing fields.
+   - **Behavior:** PASS if the described `behavior` is implemented (e.g., confirmation dialog exists in the JavaScript/template). FAIL if the behavior is missing.
+   - **Cross-module:** PASS if `cross_module` elements use the correct route/URL for the other module's endpoint. FAIL if the route is wrong or the element is missing.
+
+**For each endpoint with `client_behavior`:**
+1. Identify the JavaScript that handles this endpoint's responses
+2. For each trigger:
+   - PASS if a handler exists for the trigger condition
+   - For each effect under the trigger: PASS if the DOM update is implemented, FAIL if missing
+3. Flag any trigger with zero implemented effects as FAIL
+
+Record each check as PASS or FAIL with file:line reference.
+
 ## Step 8: Generate Verification Report
 
 Compile all results into a structured report:
@@ -219,16 +248,17 @@ Compile all results into a structured report:
 CONTRACT VERIFICATION — [module-name]
 ═══════════════════════════════════════════════════════════════
 
-| Dimension        | Checks | Pass | Fail | Status |
-|------------------|--------|------|------|--------|
-| Inputs           |   [n]  | [n]  | [n]  | ✅/❌  |
-| Outputs          |   [n]  | [n]  | [n]  | ✅/❌  |
-| Dependency Calls |   [n]  | [n]  | [n]  | ✅/❌  |
-| Events           |   [n]  | [n]  | [n]  | ✅/❌  |
-| Data Access      |   [n]  | [n]  | [n]  | ✅/❌  |
-| Coherence        |   [n]  | [n]  | [n]  | ✅/❌  |
-|------------------|--------|------|------|--------|
-| TOTAL            |   [n]  | [n]  | [n]  | ✅/❌  |
+| Dimension          | Checks | Pass | Fail | Status    |
+|--------------------|--------|------|------|-----------|
+| Inputs             |   [n]  | [n]  | [n]  | ✅/❌     |
+| Outputs            |   [n]  | [n]  | [n]  | ✅/❌     |
+| Dependency Calls   |   [n]  | [n]  | [n]  | ✅/❌     |
+| Events             |   [n]  | [n]  | [n]  | ✅/❌     |
+| Data Access        |   [n]  | [n]  | [n]  | ✅/❌     |
+| Coherence          |   [n]  | [n]  | [n]  | ✅/❌     |
+| View Completeness  |   [n]  | [n]  | [n]  | ✅/❌/⏭️  |
+|--------------------|--------|------|------|-----------|
+| TOTAL              |   [n]  | [n]  | [n]  | ✅/❌     |
 
 [If any failures, list them:]
 ───────────────────────────────────────────────────────────────
@@ -262,7 +292,7 @@ Display footer:
 ═══════════════════════════════════════════════════════════════
 ✅ CDD:VERIFY COMPLETE — [module-name] PASSED
 
-   All [N] checks passed across 6 verification dimensions.
+   All [N] checks passed across 7 verification dimensions.
    Module is verified and ready for testing.
 
 ───────────────────────────────────────────────────────────────
@@ -319,6 +349,8 @@ dimensions:
     # same structure
   coherence:
     # same structure
+  view_completeness:
+    # same structure — status may be SKIPPED if no view contracts
 
 summary:
   total_checks: [n]

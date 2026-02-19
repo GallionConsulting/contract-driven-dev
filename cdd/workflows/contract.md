@@ -239,6 +239,27 @@ provides:
         - code: [400|401|403|404|409|422]
           condition: "[when this error occurs]"
 
+      # --- View elements (OPTIONAL — only for endpoints returning rendered views) ---
+      # Include ONLY when the response is a rendered view (Blade, EJS, Jinja, etc.),
+      # NOT for JSON/redirect responses. Omit entirely for API-only endpoints.
+      view_elements:
+        - id: "[unique-element-id]"
+          description: "[what this element displays or does]"
+          data: ["[model.field1]", "[model.field2]"]         # Fields that must be rendered (omit for forms)
+          action: "[METHOD /endpoint/path]"                   # Form target endpoint (omit for display-only)
+          fields: ["[field1]", "[field2]"]                    # Form input fields (omit for display-only)
+          cross_module: "[module-name]"                       # Only if this element renders/submits to another module
+          behavior: "[required client-side interaction]"       # Confirmation dialogs, toggles, etc.
+
+      # --- Client behavior (OPTIONAL — only for AJAX/JSON endpoints consumed by a frontend) ---
+      # Specifies what the calling page must do with the response.
+      # Belongs on the CONSUMING module's contract (the module rendering the page
+      # that makes the AJAX call), not necessarily the module providing the endpoint.
+      client_behavior:
+        - trigger: "[event condition — e.g., successful response, failed response]"
+          effects:
+            - "[DOM update or UI action that must happen]"
+
 data_ownership:
   owns:
     # Tables this module is the sole owner of — only this module may write
@@ -267,6 +288,17 @@ data_ownership:
     - table: "[owned-table-name]"     # From owns — traditional
     - table: "[public-table-name]"    # Public table — must be listed in writers
 ```
+
+**View contract rules (view_elements and client_behavior):**
+- `view_elements` is OPTIONAL — include ONLY on endpoints where the response is a rendered view (Blade, EJS, Jinja, etc.), NOT on JSON or redirect responses. Omit the section entirely for API-only endpoints and API-only modules.
+- Each element is a flat entry with a unique `id` — no nesting, no layout specification. CDD specifies WHAT must be present, not WHERE or HOW it's styled.
+- `data` lists model fields that must be rendered (verifiable by searching the template for those field references).
+- `action` ties form elements to their target endpoint (same module or cross-module via `cross_module`).
+- `fields` lists form input fields that must be present.
+- `cross_module` flags elements that render data from or submit to another module's endpoint — making cross-module UI responsibility explicit.
+- `behavior` captures required client-side interactions (confirmation dialogs, dynamic toggles, etc.).
+- `client_behavior` belongs on the CONSUMING module's contract (the module that renders the page making the AJAX call), not the providing module. It specifies what DOM updates must happen on trigger conditions.
+- For API-only projects (no rendered views), skip view_elements generation entirely — zero context cost.
 
 **Critical rules for module contracts:**
 - Every `requires.from_modules` entry MUST have a corresponding `provides.functions` entry in the referenced module. If it doesn't match, fix it.
@@ -468,6 +500,18 @@ Bad contracts produce bad builds. This is where we catch "garbage in" — before
    - A function in `provides` not referenced by any endpoint or event handler
    - A dependency in `requires.from_modules` not used by any function's described flow
    - A table in `data_ownership` not accessed by any function
+
+6. **View contract gaps** — For endpoints returning rendered views (not JSON/redirect):
+   - Missing `view_elements` — an endpoint returns a view but has no structured view spec.
+     Flag it: "Endpoint GET /path returns a view but has no view_elements — builder will produce a stub."
+   - Vague `view_elements` — an element with only a description and no `data` or `fields`.
+     What exactly gets rendered? If it displays data, list the fields. If it's a form, list the inputs.
+   - Missing `cross_module` — an element's `action` targets a different module's endpoint but
+     doesn't declare `cross_module`. Flag it for explicit ownership.
+   - Missing `client_behavior` — an AJAX endpoint consumed by a frontend page has no
+     `client_behavior` on the consuming module's contract. The builder won't know what DOM
+     updates to implement on success/failure.
+   - Skip this check entirely for API-only modules (no endpoints returning views).
 
 **This is a BLOCKING gate.** If any issues are found, they MUST be fixed before
 presenting to the user for approval. Fix them in the draft — this is pre-lock,
