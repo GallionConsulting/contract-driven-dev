@@ -1,6 +1,6 @@
 # Contract-Driven Development (CDD)
 
-![Version](https://img.shields.io/badge/version-3.3.0-blue)
+![Version](https://img.shields.io/badge/version-3.4.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 A slash-command toolkit for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that lets you build real, multi-module projects — the kind that are too big for a single conversation. You describe what you want, CDD breaks it into pieces with clear contracts between them, and then you build each piece in a focused session. Nothing gets lost between sessions because everything important lives in files, not chat history.
@@ -140,7 +140,7 @@ After installation, the following is added to your Claude Code config directory:
 
 ```
 ~/.claude/
-  commands/cdd/       # 23 slash command files
+  commands/cdd/       # 24 slash command files
   cdd/
     templates/        # YAML/Markdown project templates
     workflows/        # Step-by-step procedure documents
@@ -259,7 +259,19 @@ The big step. Generates all contract files: system-wide rules, per-module contra
 
 ### Phase 2: Foundation
 
-Foundation commands build shared infrastructure that modules depend on. Run these before building any modules.
+Foundation commands build shared infrastructure that modules depend on. Start with `/cdd:stack` to install the technology stack, then run each foundation layer.
+
+#### `/cdd:stack` — Install the technology stack
+
+Installs the framework, dependencies, and build tooling that your contracts reference. Reads the dependency draft produced by `/cdd:contract`, resolves versions via web search, checks compatibility, installs everything, configures the build pipeline, and verifies it all compiles. If incompatibilities are found, it stops and tells you exactly which `/cdd:contract-change` to run.
+
+```
+/cdd:stack
+```
+
+**Reads:** `DEPENDENCIES-DRAFT.yaml`, `config.yaml`, `system-invariants.yaml` | **Produces:** `.cdd/contracts/DEPENDENCIES.yaml` (locked manifest), installed framework and packages
+
+Run this once, after contracts are locked and before any foundation work.
 
 #### `/cdd:foundation [type]` — Build an infrastructure layer
 
@@ -498,6 +510,8 @@ your-project/
       system-invariants.yaml     # System-wide rules (from /cdd:contract)
       events-registry.yaml       # Event routing map (from /cdd:contract)
       CHANGE-LOG.md              # Contract change history
+      DEPENDENCIES-DRAFT.yaml    # Technology refs extracted from contracts (from /cdd:contract)
+      DEPENDENCIES.yaml          # Locked dependency manifest (from /cdd:stack)
       modules/
         [module-name].yaml       # Per-module contract: requires, provides, data access
       data/
@@ -525,7 +539,7 @@ your-project/
 
 ```
 PLAN                        init → brief → plan → plan-review → modularize → contract
-FOUNDATION                  foundation db → auth → middleware → shared → verify
+FOUNDATION                  stack → foundation db → auth → middleware → shared → verify
 BUILD CYCLE (per module)    build → verify → test
                             (if verify fails: verify-fix → fix | rebuild | contract-change)
 WRAP-UP                     audit
@@ -545,6 +559,7 @@ EXPLORE (anytime)           explore [topic]
 | `/cdd:plan-review`           | Planning   | Validate requirements cover all user journeys and UI flows                 |
 | `/cdd:modularize`            | Planning   | Requirements → modules with dependencies (`MODULES.md`)                    |
 | `/cdd:contract`              | Planning   | Generate and lock all interface contracts                                  |
+| `/cdd:stack`                 | Foundation | Install framework, dependencies, and build tooling from contracts          |
 | `/cdd:foundation [type]`     | Foundation | Build infrastructure: `db`, `auth`, `tenant`, `middleware`, `shared`, `verify` |
 | `/cdd:build [module]`        | Building   | Build a module from its contract (picks up rebuild recommendations)        |
 | `/cdd:verify [module]`       | Building   | Check code against contract (6 dimensions, report-only)                    |
@@ -572,17 +587,18 @@ Session 3:  /cdd:plan        → review requirements          → /clear
 Session 4:  /cdd:plan-review → validate user journeys        → /clear
 Session 5:  /cdd:modularize  → review module breakdown      → /clear
 Session 6:  /cdd:contract    → review generated contracts    → /clear
-Session 7:  /cdd:foundation db         → build database     → /clear
-Session 8:  /cdd:foundation auth       → build auth         → /clear
-Session 9:  /cdd:foundation middleware → build middleware    → /clear
-Session 10: /cdd:foundation shared     → build shared       → /clear
-Session 11: /cdd:foundation verify     → confirm it works   → /clear
-Session 12: /cdd:build users      → build module            → /clear
-Session 13: /cdd:verify users     → check contract          → /clear
+Session 7:  /cdd:stack       → install framework & deps     → /clear
+Session 8:  /cdd:foundation db         → build database     → /clear
+Session 9:  /cdd:foundation auth       → build auth         → /clear
+Session 10: /cdd:foundation middleware → build middleware    → /clear
+Session 11: /cdd:foundation shared     → build shared       → /clear
+Session 12: /cdd:foundation verify     → confirm it works   → /clear
+Session 13: /cdd:build users      → build module            → /clear
+Session 14: /cdd:verify users     → check contract          → /clear
             ... if verify fails ...
             /cdd:verify-fix users → triage failures          → /clear
             /cdd:verify users     → re-verify after fix      → /clear
-Session 14: /cdd:test users       → run tests, mark complete → /clear
+Session 15: /cdd:test users       → run tests, mark complete → /clear
             ... repeat build cycle for each module ...
 Final:      /cdd:audit            → full system check               → /clear
 
@@ -617,7 +633,7 @@ If your project has existing coding standards (linting rules, framework conventi
 
 ### Git Checkpoints (Rollback)
 
-CDD automatically creates a git checkpoint commit before any code-modifying operation (`/cdd:build`, `/cdd:change`, `/cdd:foundation`, `/cdd:contract-change`, `/cdd:verify-fix`). If something goes wrong, you can undo everything back to the pre-command state:
+CDD automatically creates a git checkpoint commit before any code-modifying operation (`/cdd:stack`, `/cdd:build`, `/cdd:change`, `/cdd:foundation`, `/cdd:contract-change`, `/cdd:verify-fix`). If something goes wrong, you can undo everything back to the pre-command state:
 
 ```bash
 git reset --hard <checkpoint-hash>
