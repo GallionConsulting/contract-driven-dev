@@ -37,8 +37,11 @@ Read `.cdd/state.yaml` and `.cdd/config.yaml`. Verify:
 
 1. `planning.contract.status` is `complete`
 2. `planning.contract.locked` is `true`
+3. `foundations.stack.status` is `complete`
 
-If either fails, tell the user: "Contracts must be locked before building foundations. Run `cdd:contract` first." Stop.
+If checks 1-2 fail, tell the user: "Contracts must be locked before building foundations. Run `cdd:contract` first." Stop.
+
+If check 3 fails, tell the user: "The technology stack must be installed before building foundations. Run `cdd:stack` first — it installs the framework, dependencies, and build tooling that foundation sessions depend on." Stop.
 
 ## Step 3: Check Foundation Sequence
 
@@ -184,9 +187,6 @@ Migrations: [list]
    1. Run /clear to reset your context window
    2. Then run /cdd:foundation auth to set up
       authentication middleware
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```
@@ -280,9 +280,6 @@ Authorization: [rbac|simple|none]
    1. Run /clear to reset your context window
    2. Then run /cdd:foundation [tenant|middleware]
       [Show "tenant" if configured, otherwise "middleware"]
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```
@@ -367,9 +364,6 @@ Tenant identifier: [field]
    1. Run /clear to reset your context window
    2. Then run /cdd:foundation middleware to register the
       full middleware stack
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```
@@ -458,9 +452,6 @@ Route groups configured: [count]
    2. Then run /cdd:foundation shared to build
       shared services
       [If no shared services configured, suggest: cdd:foundation verify]
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```
@@ -559,9 +550,6 @@ Total methods: [count]
    1. Run /clear to reset your context window
    2. Then run /cdd:foundation verify to validate all
       foundations before starting module builds
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```
@@ -697,9 +685,6 @@ Foundations verified:
 
    After each build, /cdd:verify and /cdd:test work well
    on Sonnet — switch with /model to save costs.
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```

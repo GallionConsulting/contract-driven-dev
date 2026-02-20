@@ -17,10 +17,7 @@ Resume an in-progress module build from a previous session. This command replace
 <execution_context>
 You are running the `cdd:resume` command. You are picking up an in-progress build from a previous session. The session handoff file IS your context — you do NOT have the previous chat history, and you do NOT need it.
 
-**Model check — Opus recommended:**
-Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
-> ⚠️ This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
-Do not continue until the user responds.
+**Model check:** If not Opus, warn: "⚠️ Works best on **Opus** but you're on **{your-model-name}**. `/model` to switch, or type 'continue'." Wait for response.
 
 **Pre-conditions — check these FIRST:**
 1. Read `.cdd/state.yaml`

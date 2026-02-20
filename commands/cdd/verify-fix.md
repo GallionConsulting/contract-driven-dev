@@ -17,10 +17,7 @@ Triage a module's verify failures and resolve them through one of three paths: F
 <execution_context>
 You are running the `cdd:verify-fix` command. This is a TRIAGE AND RESOLUTION command — it reads a verify failure report, determines the right resolution path, and executes it.
 
-**Model check — Opus recommended:**
-Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
-> ⚠️ This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
-Do not continue until the user responds.
+**Model check:** If not Opus, warn: "⚠️ Works best on **Opus** but you're on **{your-model-name}**. `/model` to switch, or type 'continue'." Wait for response.
 
 **Argument:** The user MUST provide a module name. If no argument is provided, check `.cdd/verify-failures/` for any failure reports and list them:
 ```
@@ -238,9 +235,6 @@ Display:
 
    💰 /cdd:test works well on Sonnet — switch with /model
       to save costs (optional).
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```

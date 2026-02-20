@@ -16,10 +16,7 @@ Read the structured requirements (REQUIREMENTS.md) and decompose the system into
 <execution_context>
 You are running the `cdd:modularize` command. This breaks the system into modules suitable for contract-driven building.
 
-**Model check — Opus recommended:**
-Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
-> ⚠️ This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
-Do not continue until the user responds.
+**Model check:** If not Opus, warn: "⚠️ Works best on **Opus** but you're on **{your-model-name}**. `/model` to switch, or type 'continue'." Wait for response.
 
 **Pre-conditions — check these FIRST:**
 1. Read `.cdd/state.yaml`
@@ -324,9 +321,6 @@ Build order: [module1 → module2 → ...]
 
    This is the most critical step — contracts define the exact
    interfaces between modules. Take your time reviewing them.
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```

@@ -5,6 +5,7 @@
 
 # Dev artifacts
 ccdsp.bat
+get-setup.bat
 pushtogithub.ps1
 
 # OS files

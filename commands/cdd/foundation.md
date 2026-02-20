@@ -17,10 +17,7 @@ Build the infrastructure foundation layer that all modules depend on. This comma
 <execution_context>
 You are running the `cdd:foundation` command. This is the first implementation phase — you are writing REAL CODE that forms the project's infrastructure layer.
 
-**Model check — Opus recommended:**
-Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
-> ⚠️ This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
-Do not continue until the user responds.
+**Model check:** If not Opus, warn: "⚠️ Works best on **Opus** but you're on **{your-model-name}**. `/model` to switch, or type 'continue'." Wait for response.
 
 **Argument:** The user MUST provide a sub-type argument. If no argument is provided, display the available sub-types and their status, then stop.
 
@@ -30,7 +27,8 @@ Do not continue until the user responds.
 1. Read `.cdd/state.yaml`
 2. Read `.cdd/config.yaml`
 3. Verify `planning.contract.status: complete` AND `planning.contract.locked: true` — if not, tell the user contracts must be locked first and suggest `cdd:contract`
-4. Check sequence enforcement (detailed in the workflow)
+4. Verify `foundations.stack.status: complete` — if not, tell the user to run `cdd:stack` first to install the project's technology stack
+5. Check sequence enforcement (detailed in the workflow)
 
 **Context budget:** Each sub-type loads ONLY its relevant contract sections. Never load full source code trees or unrelated contracts. The workflow file specifies exactly what each sub-type reads.
 

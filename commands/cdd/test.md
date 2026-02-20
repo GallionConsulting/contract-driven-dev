@@ -330,9 +330,6 @@ Legend: ✅ complete  🔨 in progress  ⏸️ ready  ❌ failed  🔒 blocked
    [If parallel eligible:]
    Parallel option: [module-a] and [module-b] can be built
    independently. You could build them in separate sessions.
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```
@@ -363,9 +360,6 @@ If ALL modules are complete (from 8d), display instead:
 
    💰 /cdd:audit works well on Sonnet — stay on Sonnet
       or switch with /model to save costs (optional).
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```

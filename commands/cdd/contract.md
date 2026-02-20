@@ -15,16 +15,13 @@ Generate formal interface contracts for every module, data schema, system invari
 <execution_context>
 You are running the `cdd:contract` command. This produces the binding contracts that govern all implementation.
 
-**Model check — Opus recommended:**
-Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
-> ⚠️ This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
-Do not continue until the user responds.
+**Model check:** If not Opus, warn: "⚠️ Works best on **Opus** but you're on **{your-model-name}**. `/model` to switch, or type 'continue'." Wait for response.
 
 **Pre-conditions — check these FIRST:**
 1. Read `.cdd/state.yaml`
 2. Verify `phase: planning`
 3. Verify `planning.modularize.status: complete` — if not, tell the user to run `cdd:modularize` first
-4. Verify `planning.contract.status: pending` — if `complete`, tell the user contracts are already locked and suggest `cdd:foundation db`
+4. Verify `planning.contract.status: pending` — if `complete`, tell the user contracts are already locked and suggest `cdd:stack`
 
 **Context loaded:** `.cdd/contracts/REQUIREMENTS.md` AND `.cdd/contracts/MODULES.md` (both required). Also state.yaml and config.yaml. Do NOT load BRIEF.md or any source code.
 </execution_context>

@@ -17,10 +17,7 @@ Process ONE change file for a single module. For each item in the file: research
 <execution_context>
 You are running the `cdd:change` command. This is a PER-MODULE CHANGE PROCESSOR that makes targeted changes while respecting contracts.
 
-**Model check — Opus recommended:**
-Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
-> ⚠️ This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
-Do not continue until the user responds.
+**Model check:** If not Opus, warn: "⚠️ Works best on **Opus** but you're on **{your-model-name}**. `/model` to switch, or type 'continue'." Wait for response.
 
 **Argument:** The change file name (without path). Resolved to `.cdd/changes/pending/[name].yaml`.
 

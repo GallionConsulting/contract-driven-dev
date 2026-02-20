@@ -18,10 +18,7 @@ or understand a problem space before committing to briefs, contracts, or builds.
 <execution_context>
 You are running `cdd:explore`. This is a READ-ONLY, NO-ARTIFACT command.
 
-**Model check — Opus recommended:**
-Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
-> ⚠️ This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
-Do not continue until the user responds.
+**Model check:** If not Opus, warn: "⚠️ Works best on **Opus** but you're on **{your-model-name}**. `/model` to switch, or type 'continue'." Wait for response.
 
 **RULES:**
 - Do NOT create or modify any files

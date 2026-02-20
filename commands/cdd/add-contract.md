@@ -17,10 +17,7 @@ Generate the locked interface contract for ONE added module. Loads the addition 
 <execution_context>
 You are running the `cdd:add-contract` command. This generates ONE module contract per session.
 
-**Model check — Opus recommended:**
-Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
-> ⚠️ This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
-Do not continue until the user responds.
+**Model check:** If not Opus, warn: "⚠️ Works best on **Opus** but you're on **{your-model-name}**. `/model` to switch, or type 'continue'." Wait for response.
 
 **Argument:** The module name to generate a contract for. If no argument is provided, show pending contracts and suggest the next one.
 
@@ -316,9 +313,6 @@ Next steps:
    2. Run /cdd:contract-change for flagged issues
    3. Run /clear
    4. Run /cdd:build [module-name]
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```

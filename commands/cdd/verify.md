@@ -302,9 +302,6 @@ Display footer:
 
    💰 /cdd:test works well on Sonnet — stay on Sonnet
       or switch with /model to save costs (optional).
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```

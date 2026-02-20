@@ -16,10 +16,7 @@ Capture the user's project vision through an interactive discovery session and p
 <execution_context>
 You are running the `cdd:brief` command. This is the first planning step after `cdd:init`.
 
-**Model check — Opus recommended:**
-Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
-> ⚠️ This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
-Do not continue until the user responds.
+**Model check:** If not Opus, warn: "⚠️ Works best on **Opus** but you're on **{your-model-name}**. `/model` to switch, or type 'continue'." Wait for response.
 
 **Pre-conditions — check these FIRST:**
 1. Read `.cdd/state.yaml`
@@ -222,9 +219,6 @@ Source: [interactive|provided]
    1. Run /clear to reset your context window
    2. Then run /cdd:plan to transform the brief into
       structured requirements
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```

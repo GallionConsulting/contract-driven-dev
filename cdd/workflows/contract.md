@@ -613,6 +613,60 @@ After approval:
      ```
 4. Write the updated state.yaml back
 
+## Step 9.5: Extract Dependency Draft
+
+After locking contracts, perform a lightweight scan to extract technology dependencies referenced across all contracts. This draft is consumed by `cdd:stack` in the next session.
+
+**Scan these files (already loaded from earlier steps):**
+1. `.cdd/config.yaml` — framework, language, database
+2. `.cdd/contracts/system-invariants.yaml` — scan `design_guidelines` for technology references (CSS frameworks, JS libraries, UI toolkits)
+3. All generated module contracts — scan ONLY these sections:
+   - `view_elements.behavior` — for client-side library references (e.g., "drag-and-drop", "Alpine.js", "React")
+   - `client_behavior` — for AJAX/fetch patterns that imply CSRF integration needs
+   - `description` — for explicit technology mentions
+4. `.cdd/contracts/events-registry.yaml` — check if real-time/WebSocket events are specified (implies a real-time library)
+
+**Extract and compile:**
+- Explicit technology names (e.g., "Alpine.js", "Tailwind", "Redis", "Socket.io")
+- The contract file and section where each was referenced
+- Whether CSRF integration is needed (session auth + any client_behavior with fetch/AJAX)
+- The framework's standard build tooling (e.g., Laravel → Vite, Next.js → built-in, Rails → esbuild)
+
+**Write** `.cdd/contracts/DEPENDENCIES-DRAFT.yaml`:
+
+```yaml
+# Dependency Draft
+# Auto-extracted from locked contracts by cdd:contract
+# This is a DRAFT — cdd:stack will resolve versions and verify compatibility
+# DO NOT manually edit — re-run cdd:contract to regenerate
+
+extracted_at: "[ISO 8601 timestamp]"
+draft: true
+
+framework:
+  name: "[from config.yaml]"
+  language: "[from config.yaml]"
+  database: "[from config.yaml]"
+
+detected_dependencies:
+  - name: "[technology name]"
+    type: "[frontend|backend|build_tool|css_framework|realtime]"
+    referenced_by:
+      - file: "[contract filename]"
+        section: "[section path — e.g., design_guidelines.DG-2]"
+        context: "[brief quote showing the reference]"
+
+  # Repeat for each detected technology
+
+csrf_required: [true|false]
+csrf_reason: "[e.g., 'Session auth (system-invariants) + client_behavior fetch calls (cards, comments modules)']"
+
+build_tooling:
+  expected_bundler: "[vite|webpack|esbuild|none — based on framework default]"
+```
+
+**This step must stay lightweight** — no web searches, no version resolution, no compatibility checks. Just extract what's referenced and where. The `cdd:stack` command handles everything else in its own session with its own context budget.
+
 ## Step 10: Session Footer
 
 Display:
@@ -626,6 +680,7 @@ Contracts generated and locked:
   modules/[name].yaml ........... [N] module contracts
   data/[name].yaml .............. [N] data schemas
   events-registry.yaml .......... [N] events
+  DEPENDENCIES-DRAFT.yaml ....... dependency extraction
 
 Cross-reference check: PASSED
 All contracts locked: YES
@@ -637,15 +692,12 @@ All contracts locked: YES
 ───────────────────────────────────────────────────────────────
 👉 Recommended next step:
    1. Run /clear to reset your context window
-   2. Then run /cdd:foundation db to begin building the
-      database foundation layer
+   2. Then run /cdd:stack to install the project's technology
+      stack (framework, dependencies, build tooling)
 
    The planning phase is complete. You're now in the foundation
-   phase. Each foundation session will build one infrastructure
-   layer guided by the locked contracts.
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
+   phase. cdd:stack will install everything your project needs
+   before foundation sessions begin building infrastructure.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```

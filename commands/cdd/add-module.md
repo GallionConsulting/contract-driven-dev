@@ -17,10 +17,7 @@ Interactive scoping session for adding new modules to a built CDD project. Disco
 <execution_context>
 You are running the `cdd:add-module` command. This is an INTERACTIVE SCOPING command — no contracts are generated, no code is written.
 
-**Model check — Opus recommended:**
-Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
-> ⚠️ This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
-Do not continue until the user responds.
+**Model check:** If not Opus, warn: "⚠️ Works best on **Opus** but you're on **{your-model-name}**. `/model` to switch, or type 'continue'." Wait for response.
 
 **Pre-conditions — check these FIRST:**
 1. Read `.cdd/state.yaml`
@@ -328,9 +325,6 @@ Next steps:
    4. Run /cdd:add-contract [module-name-2]
 
    Generate contracts in the build order shown above.
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```

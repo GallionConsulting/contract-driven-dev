@@ -277,9 +277,6 @@ Based on audit findings, generate specific, actionable remediation steps:
 
    1. Run /clear to reset your context window (audit loads
       significant context)
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```
@@ -315,9 +312,6 @@ For contract issues: use /cdd:contract-change to update the contract.
 
    /clear is STRONGLY recommended — this audit loaded
    significant context into your session.
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```

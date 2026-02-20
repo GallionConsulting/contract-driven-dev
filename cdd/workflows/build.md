@@ -495,9 +495,6 @@ Display the appropriate footer:
 
    💰 /cdd:verify works well on Sonnet — switch with /model
       to save costs (optional).
-
-   /clear resets your context window to zero. The session file
-   carries everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```
@@ -518,9 +515,6 @@ Display the appropriate footer:
    1. Run /clear to reset your context window
    2. Then run /cdd:resume to continue building
       from where you left off
-
-   /clear resets your context window to zero. The session file
-   carries everything forward — nothing is lost.
 ───────────────────────────────────────────────────────────────
 ═══════════════════════════════════════════════════════════════
 ```

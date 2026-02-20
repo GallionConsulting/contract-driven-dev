@@ -35,6 +35,7 @@ PLANNING (sequential, one-time)
   /cdd:contract         Define all interface contracts (critical step)
 
 FOUNDATION (sequential)
+  /cdd:stack            Install framework, dependencies, and build tooling
   /cdd:foundation       Build infrastructure (db, auth, tenant, middleware, shared)
 
 BUILD CYCLE (repeating per module)
@@ -61,7 +62,7 @@ RECOVERY & CHANGES
 
 ───────────────────────────────────────────────────────────────
 WORKFLOW: init → brief → plan → plan-review → modularize → contract
-         → foundation → [build → verify → test]*
+         → stack → foundation → [build → verify → test]*
          (if verify fails: verify-fix → fix | rebuild | contract-change)
          → audit → [change-request → change → verify → test]*
          → [add-module → add-contract → build → verify → test]*

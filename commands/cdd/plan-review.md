@@ -16,10 +16,7 @@ Validate that the structured requirements (REQUIREMENTS.md) describe a complete,
 <execution_context>
 You are running the `cdd:plan-review` command. This validates requirements completeness before modularization.
 
-**Model check — Opus recommended:**
-Check your model from the system prompt. If you are NOT an Opus model, STOP and tell the user:
-> This command works best on **Opus** but you're running **{your-model-name}**. Run `/model` to switch before proceeding, or type "continue" to proceed anyway.
-Do not continue until the user responds.
+**Model check:** If not Opus, warn: "⚠️ Works best on **Opus** but you're on **{your-model-name}**. `/model` to switch, or type 'continue'." Wait for response.
 
 **Pre-conditions — check these FIRST:**
 1. Read `.cdd/state.yaml`
@@ -244,9 +241,6 @@ Recommended next step:
    1. Run /clear to reset your context window
    2. Then run /cdd:modularize to break the system into
       independently-buildable modules
-
-   /clear resets your context window to zero. The .cdd/ state
-   files carry everything forward — nothing is lost.
 ---------------------------------------------------------------------
 =====================================================================
 ```
