@@ -28,6 +28,29 @@ Use `AskUserQuestion` to collect the following information. Ask all questions in
 - **Tests path** — Where do tests live? (default: `tests/`)
 - **Migrations path** — Where do migrations live? (default: `migrations/`)
 
+## Step 2a: Database Connection Details (conditional)
+
+If the user chose a **server-based database** (anything other than `sqlite`, `none`, or blank), ask for connection details using `AskUserQuestion`.
+
+Before asking, display this brief notice:
+```
+Credentials are stored in plain text in .cdd/config.yaml — treat it like your .env file.
+```
+
+Ask for the following with smart defaults based on the chosen database:
+
+| Field | MySQL/MariaDB default | PostgreSQL default | MongoDB default |
+|-------|----------------------|-------------------|-----------------|
+| Host | `localhost` | `localhost` | `localhost` |
+| Port | `3306` | `5432` | `27017` |
+| Database name | (project name, snake_cased) | (project name, snake_cased) | (project name, snake_cased) |
+| Username | `root` | `postgres` | (blank) |
+| Password | (blank) | (blank) | (blank) |
+
+Present these as a single `AskUserQuestion` with prefilled defaults the user can accept or override. Use text fields, not dropdowns — developers know what they need here.
+
+If the user chose `sqlite` or `none`, skip this step entirely (no `database_connection` section will be written to config.yaml).
+
 ## Step 3: Create Directory Structure
 
 Create the following directory tree in the project root:
@@ -58,6 +81,15 @@ Replace all placeholder values with the user's answers from Step 2:
 - `{{TESTS_PATH}}` → user's tests path (or default)
 - `{{MIGRATIONS_PATH}}` → user's migrations path (or default)
 
+**Database connection (conditional):** If the user provided connection details in Step 2a, uncomment and populate the `database_connection` section:
+- `{{DB_HOST}}` → host (e.g., `localhost`)
+- `{{DB_PORT}}` → port number (e.g., `3306`)
+- `{{DB_NAME}}` → database name
+- `{{DB_USERNAME}}` → username
+- `{{DB_PASSWORD}}` → password
+
+If the database is `sqlite` or `none`, leave the `database_connection` section commented out (as it appears in the template).
+
 The `foundations` section stays as an empty array `[]` — foundations are determined during `cdd:modularize` based on requirements analysis.
 
 Write the completed config.yaml to `.cdd/config.yaml`.
@@ -85,6 +117,7 @@ CDD INITIALIZED
 
 Project: [project name]
 Stack: [language] / [framework] / [database]
+[If database_connection present: "DB: [username]@[host]:[port]/[database_name]"]
 Context Window: 200k tokens (40% max usage = 80k per session)
 
 Directory created: .cdd/

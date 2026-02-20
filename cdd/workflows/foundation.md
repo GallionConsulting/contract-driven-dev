@@ -98,16 +98,29 @@ Read these files (and ONLY these files):
 
 ### 4a-Process
 
-1. **Analyze data contracts:** Read every data contract file. For each table, note:
+1. **Configure database connection:** Read `stack.database_connection` from `.cdd/config.yaml`. If present, write these credentials into the framework's environment/config file **before** doing anything else:
+   - **Laravel:** Update `.env` — set `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` to match the stored values
+   - **Django:** Update `settings.py` DATABASES default — set `ENGINE`, `HOST`, `PORT`, `NAME`, `USER`, `PASSWORD`
+   - **Express/Knex:** Update `knexfile.js` or `.env` — set connection host, port, database, user, password
+   - **Rails:** Update `config/database.yml` — set host, port, database, username, password for the development environment
+   - **Other frameworks:** Write credentials to whatever config mechanism the framework uses
+
+   If `stack.database_connection` is **not present** (sqlite or none), use the framework's default embedded database configuration and skip this step.
+
+   **Do NOT auto-detect databases, guess credentials, or install database servers.** Use exactly what is in config.yaml.
+
+2. **Verify connection:** After writing the config, test the database connection using the framework's tooling or a simple connection attempt. If the connection fails, report the error clearly (including host, port, and database name — but NOT the password) and stop. Suggest the user check that the database server is running and the credentials in `.cdd/config.yaml` are correct.
+
+3. **Analyze data contracts:** Read every data contract file. For each table, note:
    - Table name, columns, types, constraints
    - Primary key strategy (from system invariants)
    - Audit columns to include (from system invariants)
    - Foreign key relationships
    - Indexes
 
-2. **Plan migration order:** Determine the correct order for creating tables based on foreign key dependencies. Tables referenced by foreign keys must be created before the tables that reference them.
+4. **Plan migration order:** Determine the correct order for creating tables based on foreign key dependencies. Tables referenced by foreign keys must be created before the tables that reference them.
 
-3. **Generate migration files:** Create migration files at the path specified in `config.yaml` `paths.migrations`. Follow the framework's migration conventions:
+5. **Generate migration files:** Create migration files at the path specified in `config.yaml` `paths.migrations`. Follow the framework's migration conventions:
    - **Laravel:** `database/migrations/YYYY_MM_DD_HHMMSS_create_[table]_table.php`
    - **Django:** Create or update model definitions; migrations are auto-generated
    - **Express/Knex:** `migrations/YYYYMMDDHHMMSS_create_[table].js`
@@ -122,7 +135,7 @@ Read these files (and ONLY these files):
    - Create foreign key constraints with the specified on_delete behavior
    - Add any default values specified in the contract
 
-4. **Run migrations:** Execute the migration command for the framework:
+6. **Run migrations:** Execute the migration command for the framework:
    - **Laravel:** `php artisan migrate`
    - **Django:** `python manage.py makemigrations && python manage.py migrate`
    - **Knex:** `npx knex migrate:latest`
@@ -131,13 +144,13 @@ Read these files (and ONLY these files):
 
    If migrations fail, report the error clearly and stop. Do NOT update state.
 
-5. **Verify tables:** After migrations succeed, verify the database structure matches the contracts:
+7. **Verify tables:** After migrations succeed, verify the database structure matches the contracts:
    - Check that each contracted table exists
    - Verify column names and types match
    - Verify indexes exist
    - Report any discrepancies
 
-6. **Display results:**
+8. **Display results:**
    ```
    Database Foundations:
      Tables created: [count]

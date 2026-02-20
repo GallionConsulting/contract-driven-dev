@@ -11,6 +11,13 @@ stack:
   primary_language: "{{PRIMARY_LANGUAGE}}"
   framework: "{{FRAMEWORK}}"
   database: "{{DATABASE}}"
+  # Connection details (populated for server-based databases; omitted for sqlite/none)
+  # database_connection:
+  #   host: "localhost"
+  #   port: 3306
+  #   database_name: "my_app"
+  #   username: "root"
+  #   password: "secret"
 
 # Paths (relative to project root)
 paths:
